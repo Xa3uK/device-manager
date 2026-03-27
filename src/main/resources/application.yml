@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: DeviceManager
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/device_manager
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
