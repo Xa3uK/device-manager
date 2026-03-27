@@ -1,4 +1,4 @@
-package com.koval.devicemanager.api;
+package com.koval.devicemanager.api.controller;
 
 import com.koval.devicemanager.api.dto.request.CreateDeviceRequest;
 import com.koval.devicemanager.api.dto.response.CreateDeviceResponse;

@@ -13,6 +13,7 @@ public class CreateDeviceResponse {
     private final String brand;
     private final DeviceState state;
     private final Instant createdAt;
+    private final Instant updatedAt;
 
     public CreateDeviceResponse(Device device) {
         this.id = device.getId();
@@ -20,5 +21,6 @@ public class CreateDeviceResponse {
         this.brand = device.getBrand();
         this.state = device.getState();
         this.createdAt = device.getCreatedAt();
+        this.updatedAt = device.getUpdatedAt();
     }
 }
