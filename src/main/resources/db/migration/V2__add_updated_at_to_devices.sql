@@ -1,0 +1,2 @@
+ALTER TABLE devices
+    ADD COLUMN updated_at TIMESTAMPTZ;

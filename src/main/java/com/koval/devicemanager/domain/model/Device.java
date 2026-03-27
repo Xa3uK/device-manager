@@ -29,8 +29,17 @@ public class Device {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Setter(lombok.AccessLevel.NONE)
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     @PrePersist
     private void prePersist() {
         this.createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        this.updatedAt = Instant.now();
     }
 }
