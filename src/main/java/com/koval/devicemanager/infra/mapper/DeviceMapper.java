@@ -25,4 +25,10 @@ public class DeviceMapper {
         entity.setState(device.getState());
         return entity;
     }
+
+    public void mergeToEntity(Device source, DeviceEntity target) {
+        if (source.getName() != null) target.setName(source.getName());
+        if (source.getBrand() != null) target.setBrand(source.getBrand());
+        if (source.getState() != null) target.setState(source.getState());
+    }
 }
