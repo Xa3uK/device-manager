@@ -8,22 +8,22 @@ import org.springframework.stereotype.Component;
 public class DeviceMapper {
 
     public Device toDomain(DeviceEntity entity) {
-        Device device = new Device();
-        device.setId(entity.getId());
-        device.setName(entity.getName());
-        device.setBrand(entity.getBrand());
-        device.setState(entity.getState());
-        device.setCreatedAt(entity.getCreatedAt());
-        device.setUpdatedAt(entity.getUpdatedAt());
-        return device;
+        return Device.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .brand(entity.getBrand())
+                .state(entity.getState())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
     }
 
     public DeviceEntity toEntity(Device device) {
-        DeviceEntity entity = new DeviceEntity();
-        entity.setName(device.getName());
-        entity.setBrand(device.getBrand());
-        entity.setState(device.getState());
-        return entity;
+        return DeviceEntity.builder()
+                .name(device.getName())
+                .brand(device.getBrand())
+                .state(device.getState())
+                .build();
     }
 
     public void mergeToEntity(Device source, DeviceEntity target) {

@@ -2,7 +2,10 @@ package com.koval.devicemanager.infra.entity;
 
 import com.koval.devicemanager.domain.model.DeviceState;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
@@ -11,6 +14,9 @@ import java.time.Instant;
 @Table(name = "devices")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DeviceEntity {
 
     @Id
