@@ -1,7 +1,6 @@
 package com.koval.devicemanager.domain.service;
 
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
-import com.koval.devicemanager.domain.exception.InvalidDeviceStateException;
 import com.koval.devicemanager.domain.exception.PageSizeExceededException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
@@ -30,9 +29,7 @@ public class DeviceService {
         return deviceRepository.save(device);
     }
 
-    public Device update(Long id, String name, String brand, String rawState) {
-        DeviceState state = parseState(rawState);
-
+    public Device update(Long id, String name, String brand, DeviceState state) {
         Device existing = deviceRepository.findById(id)
                 .orElseThrow(() -> new DeviceNotFoundException(id));
 
@@ -47,15 +44,6 @@ public class DeviceService {
         changes.setState(state);
 
         return deviceRepository.update(changes);
-    }
-
-    private DeviceState parseState(String rawState) {
-        if (rawState == null) return null;
-        try {
-            return DeviceState.valueOf(rawState.toUpperCase().replace("-", "_"));
-        } catch (IllegalArgumentException e) {
-            throw new InvalidDeviceStateException(rawState);
-        }
     }
 
     public Device getById(Long id) {
