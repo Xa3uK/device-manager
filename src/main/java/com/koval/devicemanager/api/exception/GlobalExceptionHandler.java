@@ -6,6 +6,7 @@ import com.koval.devicemanager.api.dto.response.ErrorResponse;
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
 import com.koval.devicemanager.domain.exception.PageSizeExceededException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -53,6 +54,13 @@ public class GlobalExceptionHandler {
             return invalidEnumValueError(cause, request);
         }
         return badRequest("Malformed request body", request);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidSortProperty(PropertyReferenceException ex, HttpServletRequest request) {
+        return badRequest("Invalid sort property '" + ex.getPropertyName() + "'. " +
+                "Valid properties: id, name, brand, state, createdAt, updatedAt", request);
     }
 
     @ExceptionHandler(IllegalStateException.class)
