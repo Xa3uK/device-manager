@@ -3,9 +3,11 @@ package com.koval.devicemanager.api.controller;
 import com.koval.devicemanager.api.dto.request.CreateDeviceRequest;
 import com.koval.devicemanager.api.dto.request.UpdateDeviceRequest;
 import com.koval.devicemanager.api.dto.response.DeviceResponse;
+import com.koval.devicemanager.api.dto.response.PageResponse;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.service.DeviceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,8 +39,8 @@ public class DeviceController {
     }
 
     @GetMapping
-    public List<DeviceResponse> getAll() {
-        return deviceService.getAll().stream().map(DeviceResponse::new).toList();
+    public PageResponse<DeviceResponse> getAll(Pageable pageable) {
+        return new PageResponse<>(deviceService.getAll(pageable).map(DeviceResponse::new));
     }
 
     @GetMapping(params = "brand")

@@ -7,6 +7,8 @@ import com.koval.devicemanager.infra.entity.DeviceEntity;
 import com.koval.devicemanager.infra.mapper.DeviceMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -38,8 +40,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public List<Device> findAll() {
-        return jpaRepository.findAll().stream().map(mapper::toDomain).toList();
+    public Page<Device> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDomain);
     }
 
     @Override

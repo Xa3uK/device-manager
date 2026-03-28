@@ -1,13 +1,20 @@
 package com.koval.devicemanager.domain.service;
 
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
+import com.koval.devicemanager.domain.exception.InvalidDeviceStateException;
+import com.koval.devicemanager.domain.exception.PageSizeExceededException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +30,9 @@ public class DeviceService {
         return deviceRepository.save(device);
     }
 
-    public Device update(Long id, String name, String brand, DeviceState state) {
+    public Device update(Long id, String name, String brand, String rawState) {
+        DeviceState state = parseState(rawState);
+
         Device existing = deviceRepository.findById(id)
                 .orElseThrow(() -> new DeviceNotFoundException(id));
 
@@ -40,13 +49,27 @@ public class DeviceService {
         return deviceRepository.update(changes);
     }
 
+    private DeviceState parseState(String rawState) {
+        if (rawState == null) return null;
+        try {
+            return DeviceState.valueOf(rawState.toUpperCase().replace("-", "_"));
+        } catch (IllegalArgumentException e) {
+            throw new InvalidDeviceStateException(rawState);
+        }
+    }
+
     public Device getById(Long id) {
         return deviceRepository.findById(id)
                 .orElseThrow(() -> new DeviceNotFoundException(id));
     }
 
-    public List<Device> getAll() {
-        return deviceRepository.findAll();
+    private static final int MAX_PAGE_SIZE = 100;
+
+    public Page<Device> getAll(Pageable pageable) {
+        if (pageable.getPageSize() > MAX_PAGE_SIZE) {
+            throw new PageSizeExceededException(pageable.getPageSize(), MAX_PAGE_SIZE);
+        }
+        return deviceRepository.findAll(pageable);
     }
 
     public List<Device> getAllByBrand(String brand) {
