@@ -44,7 +44,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public List<Device> findAllByBrand(String brand) {
-        return jpaRepository.findAllByBrand(brand).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findAllByBrandIgnoreCase(brand).stream().map(mapper::toDomain).toList();
     }
 
     @Override

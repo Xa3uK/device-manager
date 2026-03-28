@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface DeviceJpaRepository extends JpaRepository<DeviceEntity, Long> {
 
-    List<DeviceEntity> findAllByBrand(String brand);
+    List<DeviceEntity> findAllByBrandIgnoreCase(String brand);
 
     List<DeviceEntity> findAllByState(DeviceState state);
 }

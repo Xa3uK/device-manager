@@ -41,13 +41,13 @@ public class DeviceController {
         return deviceService.getAll().stream().map(DeviceResponse::new).toList();
     }
 
-    @GetMapping("/brand/{brand}")
-    public List<DeviceResponse> getAllByBrand(@PathVariable String brand) {
+    @GetMapping(params = "brand")
+    public List<DeviceResponse> getAllByBrand(@RequestParam String brand) {
         return deviceService.getAllByBrand(brand).stream().map(DeviceResponse::new).toList();
     }
 
-    @GetMapping("/state/{state}")
-    public List<DeviceResponse> getAllByState(@PathVariable DeviceState state) {
+    @GetMapping(params = "state")
+    public List<DeviceResponse> getAllByState(@RequestParam DeviceState state) {
         return deviceService.getAllByState(state).stream().map(DeviceResponse::new).toList();
     }
 
