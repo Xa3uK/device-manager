@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,6 +53,28 @@ class DeviceControllerTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .build();
+    }
+
+    @Nested
+    @DisplayName("POST /api/devices")
+    class Create {
+
+        @Test
+        @DisplayName("returns 201 with created device")
+        void returns201WithCreatedDevice() throws Exception {
+            Device created = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
+            when(deviceService.create("iPhone 15", "Apple")).thenReturn(created);
+
+            mockMvc.perform(post("/api/devices")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"name": "iPhone 15", "brand": "Apple"}
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andExpect(content().json("""
+                            {"id": 1, "name": "iPhone 15", "brand": "Apple", "state": "AVAILABLE"}
+                            """));
+        }
     }
 
     @Nested

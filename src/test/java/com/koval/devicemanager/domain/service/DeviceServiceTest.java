@@ -38,6 +38,26 @@ class DeviceServiceTest {
     private DeviceService deviceService;
 
     @Nested
+    @DisplayName("create")
+    class Create {
+
+        @Test
+        @DisplayName("creates device with AVAILABLE state")
+        void createsDeviceWithAvailableState() {
+            Device saved = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
+            when(deviceRepository.save(any(Device.class))).thenReturn(saved);
+
+            Device result = deviceService.create("iPhone 15", "Apple");
+
+            assertThat(result.getId()).isEqualTo(1L);
+            assertThat(result.getName()).isEqualTo("iPhone 15");
+            assertThat(result.getBrand()).isEqualTo("Apple");
+            assertThat(result.getState()).isEqualTo(DeviceState.AVAILABLE);
+            verify(deviceRepository).save(any(Device.class));
+        }
+    }
+
+    @Nested
     @DisplayName("getById")
     class GetById {
 
