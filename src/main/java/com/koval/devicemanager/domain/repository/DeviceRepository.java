@@ -5,7 +5,6 @@ import com.koval.devicemanager.domain.model.DeviceState;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface DeviceRepository {
@@ -18,9 +17,9 @@ public interface DeviceRepository {
 
     Page<Device> findAll(Pageable pageable);
 
-    List<Device> findAllByBrand(String brand);
+    Page<Device> findAllByBrand(String brand, Pageable pageable);
 
-    List<Device> findAllByState(DeviceState state);
+    Page<Device> findAllByState(DeviceState state, Pageable pageable);
 
     void delete(Long id);
 }

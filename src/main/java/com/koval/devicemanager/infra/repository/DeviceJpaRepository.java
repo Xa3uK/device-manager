@@ -4,11 +4,12 @@ import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.infra.entity.DeviceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface DeviceJpaRepository extends JpaRepository<DeviceEntity, Long> {
 
-    List<DeviceEntity> findAllByBrandIgnoreCase(String brand);
+    Page<DeviceEntity> findAllByBrandIgnoreCase(String brand, Pageable pageable);
 
-    List<DeviceEntity> findAllByState(DeviceState state);
+    Page<DeviceEntity> findAllByState(DeviceState state, Pageable pageable);
 }

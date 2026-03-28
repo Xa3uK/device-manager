@@ -11,8 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 
 
 @Service
@@ -60,12 +58,18 @@ public class DeviceService {
         return deviceRepository.findAll(pageable);
     }
 
-    public List<Device> getAllByBrand(String brand) {
-        return deviceRepository.findAllByBrand(brand);
+    public Page<Device> getAllByBrand(String brand, Pageable pageable) {
+        if (pageable.getPageSize() > MAX_PAGE_SIZE) {
+            throw new PageSizeExceededException(pageable.getPageSize(), MAX_PAGE_SIZE);
+        }
+        return deviceRepository.findAllByBrand(brand, pageable);
     }
 
-    public List<Device> getAllByState(DeviceState state) {
-        return deviceRepository.findAllByState(state);
+    public Page<Device> getAllByState(DeviceState state, Pageable pageable) {
+        if (pageable.getPageSize() > MAX_PAGE_SIZE) {
+            throw new PageSizeExceededException(pageable.getPageSize(), MAX_PAGE_SIZE);
+        }
+        return deviceRepository.findAllByState(state, pageable);
     }
 
     public void delete(Long id) {

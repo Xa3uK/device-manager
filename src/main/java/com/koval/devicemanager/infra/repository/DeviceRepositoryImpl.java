@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -45,13 +44,13 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public List<Device> findAllByBrand(String brand) {
-        return jpaRepository.findAllByBrandIgnoreCase(brand).stream().map(mapper::toDomain).toList();
+    public Page<Device> findAllByBrand(String brand, Pageable pageable) {
+        return jpaRepository.findAllByBrandIgnoreCase(brand, pageable).map(mapper::toDomain);
     }
 
     @Override
-    public List<Device> findAllByState(DeviceState state) {
-        return jpaRepository.findAllByState(state).stream().map(mapper::toDomain).toList();
+    public Page<Device> findAllByState(DeviceState state, Pageable pageable) {
+        return jpaRepository.findAllByState(state, pageable).map(mapper::toDomain);
     }
 
     @Override
