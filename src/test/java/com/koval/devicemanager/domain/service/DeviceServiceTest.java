@@ -194,6 +194,47 @@ class DeviceServiceTest {
     }
 
     @Nested
+    @DisplayName("delete")
+    class Delete {
+
+        @Test
+        @DisplayName("deletes device successfully")
+        void deletesDeviceSuccessfully() {
+            Device available = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
+            when(deviceRepository.findById(1L)).thenReturn(Optional.of(available));
+
+            deviceService.delete(1L);
+
+            verify(deviceRepository).delete(1L);
+        }
+
+        @Test
+        @DisplayName("throws DeviceNotFoundException when device not found")
+        void throwsExceptionWhenNotFound() {
+            when(deviceRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> deviceService.delete(99L))
+                    .isInstanceOf(DeviceNotFoundException.class)
+                    .hasMessageContaining("99");
+
+            verify(deviceRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("throws IllegalStateException when device is IN_USE")
+        void throwsExceptionWhenDeviceIsInUse() {
+            Device inUseDevice = Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build();
+            when(deviceRepository.findById(2L)).thenReturn(Optional.of(inUseDevice));
+
+            assertThatThrownBy(() -> deviceService.delete(2L))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("in use");
+
+            verify(deviceRepository, never()).delete(any());
+        }
+    }
+
+    @Nested
     @DisplayName("update")
     class Update {
 

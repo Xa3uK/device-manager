@@ -28,7 +28,10 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -157,6 +160,44 @@ class DeviceControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(content().json("""
                             {"status": 400, "message": "Invalid value 'INVALID' for field 'state'. Valid values are: AVAILABLE, IN_USE, INACTIVE"}
+                            """));
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /api/devices/{id}")
+    class Delete {
+
+        @Test
+        @DisplayName("returns 204 when device deleted")
+        void returns204WhenDeleted() throws Exception {
+            doNothing().when(deviceService).delete(1L);
+
+            mockMvc.perform(delete("/api/devices/1"))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        @DisplayName("returns 404 when device not found")
+        void returns404WhenNotFound() throws Exception {
+            doThrow(new DeviceNotFoundException(99L)).when(deviceService).delete(99L);
+
+            mockMvc.perform(delete("/api/devices/99"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().json("""
+                            {"status": 404, "message": "Device not found with id: 99"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 422 when device is IN_USE")
+        void returns422WhenDeviceIsInUse() throws Exception {
+            doThrow(new IllegalStateException("Device cannot be deleted while it is in use")).when(deviceService).delete(2L);
+
+            mockMvc.perform(delete("/api/devices/2"))
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(content().json("""
+                            {"status": 422, "message": "Device cannot be deleted while it is in use"}
                             """));
         }
     }
