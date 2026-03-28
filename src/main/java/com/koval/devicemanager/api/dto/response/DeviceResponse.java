@@ -1,5 +1,6 @@
 package com.koval.devicemanager.api.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
@@ -11,6 +12,7 @@ import java.time.Instant;
 // Consider splitting into CreateDeviceResponse, UpdateDeviceResponse, GetDeviceResponse
 // if their fields start to diverge.
 @Getter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"id", "name", "brand", "state", "createdAt", "updatedAt"})
 public class DeviceResponse {
     private final Long id;
