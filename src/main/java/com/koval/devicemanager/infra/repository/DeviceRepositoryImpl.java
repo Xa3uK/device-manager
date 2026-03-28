@@ -51,4 +51,9 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     public List<Device> findAllByState(DeviceState state) {
         return jpaRepository.findAllByState(state).stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public void delete(Long id) {
+        jpaRepository.deleteById(id);
+    }
 }

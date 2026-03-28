@@ -56,4 +56,15 @@ public class DeviceService {
     public List<Device> getAllByState(DeviceState state) {
         return deviceRepository.findAllByState(state);
     }
+
+    public void delete(Long id) {
+        Device device = deviceRepository.findById(id)
+                .orElseThrow(() -> new DeviceNotFoundException(id));
+
+        if (device.getState() == DeviceState.IN_USE) {
+            throw new IllegalStateException("Device cannot be deleted while it is in use");
+        }
+
+        deviceRepository.delete(id);
+    }
 }

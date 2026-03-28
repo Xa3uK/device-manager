@@ -19,4 +19,6 @@ public interface DeviceRepository {
     List<Device> findAllByBrand(String brand);
 
     List<Device> findAllByState(DeviceState state);
+
+    void delete(Long id);
 }

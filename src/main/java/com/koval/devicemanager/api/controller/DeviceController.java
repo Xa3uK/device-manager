@@ -50,4 +50,10 @@ public class DeviceController {
     public List<DeviceResponse> getAllByState(@PathVariable DeviceState state) {
         return deviceService.getAllByState(state).stream().map(DeviceResponse::new).toList();
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        deviceService.delete(id);
+    }
 }
