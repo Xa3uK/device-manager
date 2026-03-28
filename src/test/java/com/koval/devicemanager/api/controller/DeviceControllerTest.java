@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -26,8 +27,10 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,12 +46,6 @@ class DeviceControllerTest {
     @InjectMocks
     private DeviceController deviceController;
 
-    private final List<Device> devices = List.of(
-            Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
-            Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
-            Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
-    );
-
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(deviceController)
@@ -58,13 +55,98 @@ class DeviceControllerTest {
     }
 
     @Nested
+    @DisplayName("PATCH /api/devices/{id}")
+    class Update {
+
+        @Test
+        @DisplayName("returns 200 with updated device")
+        void returns200WithUpdatedDevice() throws Exception {
+            Device updated = Device.builder().id(1L).name("iPhone 15 Pro").brand("Apple").state(DeviceState.IN_USE).createdAt(Instant.now()).build();
+            when(deviceService.update(eq(1L), eq("iPhone 15 Pro"), isNull(), eq(DeviceState.IN_USE))).thenReturn(updated);
+
+            mockMvc.perform(patch("/api/devices/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"name": "iPhone 15 Pro", "state": "IN_USE"}
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json("""
+                            {"id": 1, "name": "iPhone 15 Pro", "brand": "Apple", "state": "IN_USE"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 404 when device not found")
+        void returns404WhenNotFound() throws Exception {
+            when(deviceService.update(eq(99L), any(), any(), any()))
+                    .thenThrow(new DeviceNotFoundException(99L));
+
+            mockMvc.perform(patch("/api/devices/99")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"name": "test"}
+                                    """))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().json("""
+                            {"status": 404, "message": "Device not found with id: 99"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 422 when updating name/brand of IN_USE device")
+        void returns422WhenDeviceIsInUse() throws Exception {
+            when(deviceService.update(eq(2L), any(), any(), any()))
+                    .thenThrow(new IllegalStateException("Name and brand cannot be updated while device is in use"));
+
+            mockMvc.perform(patch("/api/devices/2")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"name": "New Name"}
+                                    """))
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(content().json("""
+                            {"status": 422, "message": "Name and brand cannot be updated while device is in use"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 400 when explicit null field is provided")
+        void returns400WhenNullFieldProvided() throws Exception {
+            mockMvc.perform(patch("/api/devices/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"state": null}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().json("""
+                            {"status": 400, "message": "Field 'state' must not be null"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 400 when invalid state value is provided")
+        void returns400WhenInvalidStateProvided() throws Exception {
+            mockMvc.perform(patch("/api/devices/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"state": "INVALID"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().json("""
+                            {"status": 400, "message": "Invalid value 'INVALID' for field 'state'. Valid values are: AVAILABLE, IN_USE, INACTIVE"}
+                            """));
+        }
+    }
+
+    @Nested
     @DisplayName("GET /api/devices/{id}")
     class GetById {
 
         @Test
         @DisplayName("returns 200 with device when found")
         void returns200WhenFound() throws Exception {
-            when(deviceService.getById(1L)).thenReturn(devices.get(0));
+            Device iphone = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
+            when(deviceService.getById(1L)).thenReturn(iphone);
 
             mockMvc.perform(get("/api/devices/1"))
                     .andExpect(status().isOk())
@@ -101,8 +183,12 @@ class DeviceControllerTest {
         @Test
         @DisplayName("returns 200 with paginated response")
         void returns200WithPagedResponse() throws Exception {
-            var page = new PageImpl<>(devices, PageRequest.of(0, 10), devices.size());
-            when(deviceService.getAll(any(Pageable.class))).thenReturn(page);
+            List<Device> deviceList = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
+                    Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
+            );
+            when(deviceService.getAll(any(Pageable.class))).thenReturn(new PageImpl<>(deviceList, PageRequest.of(0, 10), deviceList.size()));
 
             mockMvc.perform(get("/api/devices"))
                     .andExpect(status().isOk())
@@ -125,12 +211,11 @@ class DeviceControllerTest {
         @DisplayName("returns 200 filtered by brand")
         void returns200FilteredByBrand() throws Exception {
             List<Device> appleDevices = List.of(
-                    devices.get(0),
-                    devices.get(0).toBuilder().id(4L).name("iPhone 14").build(),
-                    devices.get(0).toBuilder().id(5L).name("iPhone 13").build()
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("iPhone 14").brand("Apple").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
+                    Device.builder().id(3L).name("iPhone 13").brand("Apple").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
             );
-            var page = new PageImpl<>(appleDevices, PageRequest.of(0, 10), appleDevices.size());
-            when(deviceService.getAllByBrand(eq("Apple"), any(Pageable.class))).thenReturn(page);
+            when(deviceService.getAllByBrand(eq("Apple"), any(Pageable.class))).thenReturn(new PageImpl<>(appleDevices, PageRequest.of(0, 10), appleDevices.size()));
 
             mockMvc.perform(get("/api/devices").param("brand", "Apple"))
                     .andExpect(status().isOk())
@@ -138,8 +223,8 @@ class DeviceControllerTest {
                             {
                               "content": [
                                 {"id": 1, "brand": "Apple"},
-                                {"id": 4, "brand": "Apple"},
-                                {"id": 5, "brand": "Apple"}
+                                {"id": 2, "brand": "Apple"},
+                                {"id": 3, "brand": "Apple"}
                               ],
                               "totalElements": 3
                             }
@@ -150,12 +235,11 @@ class DeviceControllerTest {
         @DisplayName("returns 200 filtered by state")
         void returns200FilteredByState() throws Exception {
             List<Device> availableDevices = List.of(
-                    devices.get(0),
-                    devices.get(0).toBuilder().id(4L).name("Galaxy S24").brand("Samsung").build(),
-                    devices.get(0).toBuilder().id(5L).name("Pixel 8").brand("Google").build()
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build()
             );
-            var page = new PageImpl<>(availableDevices, PageRequest.of(0, 10), availableDevices.size());
-            when(deviceService.getAllByState(eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(page);
+            when(deviceService.getAllByState(eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(new PageImpl<>(availableDevices, PageRequest.of(0, 10), availableDevices.size()));
 
             mockMvc.perform(get("/api/devices").param("state", "AVAILABLE"))
                     .andExpect(status().isOk())
@@ -163,8 +247,8 @@ class DeviceControllerTest {
                             {
                               "content": [
                                 {"id": 1, "state": "AVAILABLE"},
-                                {"id": 4, "state": "AVAILABLE"},
-                                {"id": 5, "state": "AVAILABLE"}
+                                {"id": 2, "state": "AVAILABLE"},
+                                {"id": 3, "state": "AVAILABLE"}
                               ],
                               "totalElements": 3
                             }

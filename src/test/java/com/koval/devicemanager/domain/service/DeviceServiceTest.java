@@ -37,12 +37,6 @@ class DeviceServiceTest {
     @InjectMocks
     private DeviceService deviceService;
 
-    private final List<Device> devices = List.of(
-            Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
-            Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
-            Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
-    );
-
     @Nested
     @DisplayName("getById")
     class GetById {
@@ -50,7 +44,8 @@ class DeviceServiceTest {
         @Test
         @DisplayName("returns device when found")
         void returnsDeviceWhenFound() {
-            when(deviceRepository.findById(1L)).thenReturn(Optional.of(devices.get(0)));
+            Device iphone = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
+            when(deviceRepository.findById(1L)).thenReturn(Optional.of(iphone));
 
             Device result = deviceService.getById(1L);
 
@@ -81,8 +76,12 @@ class DeviceServiceTest {
         @DisplayName("returns page when page size is valid")
         void returnsPageWhenSizeIsValid() {
             Pageable pageable = PageRequest.of(0, 10);
-            Page<Device> page = new PageImpl<>(devices, pageable, devices.size());
-            when(deviceRepository.findAll(pageable)).thenReturn(page);
+            List<Device> deviceList = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
+                    Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
+            );
+            when(deviceRepository.findAll(pageable)).thenReturn(new PageImpl<>(deviceList, pageable, deviceList.size()));
 
             Page<Device> result = deviceService.getAll(pageable);
 
@@ -114,12 +113,11 @@ class DeviceServiceTest {
         void returnsFilteredPageWhenSizeIsValid() {
             Pageable pageable = PageRequest.of(0, 10);
             List<Device> appleDevices = List.of(
-                    devices.get(0),
-                    devices.get(0).toBuilder().id(4L).name("iPhone 14").build(),
-                    devices.get(0).toBuilder().id(5L).name("iPhone 13").build()
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("iPhone 14").brand("Apple").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
+                    Device.builder().id(3L).name("iPhone 13").brand("Apple").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
             );
-            Page<Device> page = new PageImpl<>(appleDevices, pageable, appleDevices.size());
-            when(deviceRepository.findAllByBrand("Apple", pageable)).thenReturn(page);
+            when(deviceRepository.findAllByBrand("Apple", pageable)).thenReturn(new PageImpl<>(appleDevices, pageable, appleDevices.size()));
 
             Page<Device> result = deviceService.getAllByBrand("Apple", pageable);
 
@@ -150,12 +148,11 @@ class DeviceServiceTest {
         void returnsFilteredPageForEachState(DeviceState state) {
             Pageable pageable = PageRequest.of(0, 10);
             List<Device> stateDevices = List.of(
-                    devices.get(0).toBuilder().state(state).build(),
-                    devices.get(0).toBuilder().id(4L).name("Galaxy S24").brand("Samsung").state(state).build(),
-                    devices.get(0).toBuilder().id(5L).name("Pixel 8").brand("Google").state(state).build()
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(state).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(state).createdAt(Instant.now()).build(),
+                    Device.builder().id(3L).name("Pixel 8").brand("Google").state(state).createdAt(Instant.now()).build()
             );
-            Page<Device> page = new PageImpl<>(stateDevices, pageable, stateDevices.size());
-            when(deviceRepository.findAllByState(state, pageable)).thenReturn(page);
+            when(deviceRepository.findAllByState(state, pageable)).thenReturn(new PageImpl<>(stateDevices, pageable, stateDevices.size()));
 
             Page<Device> result = deviceService.getAllByState(state, pageable);
 
@@ -173,6 +170,78 @@ class DeviceServiceTest {
                     .isInstanceOf(PageSizeExceededException.class);
 
             verifyNoInteractions(deviceRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("update")
+    class Update {
+
+        @Test
+        @DisplayName("updates device successfully")
+        void updatesDeviceSuccessfully() {
+            Device existing = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
+            Device updated = existing.toBuilder().name("iPhone 15 Pro").state(DeviceState.IN_USE).build();
+            when(deviceRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(deviceRepository.update(any(Device.class))).thenReturn(updated);
+
+            Device result = deviceService.update(1L, "iPhone 15 Pro", null, DeviceState.IN_USE);
+
+            assertThat(result.getName()).isEqualTo("iPhone 15 Pro");
+            assertThat(result.getState()).isEqualTo(DeviceState.IN_USE);
+            verify(deviceRepository).findById(1L);
+            verify(deviceRepository).update(any(Device.class));
+        }
+
+        @Test
+        @DisplayName("throws DeviceNotFoundException when device not found")
+        void throwsExceptionWhenNotFound() {
+            when(deviceRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> deviceService.update(99L, "name", null, null))
+                .isInstanceOf(DeviceNotFoundException.class)
+                .hasMessageContaining("99");
+
+            verify(deviceRepository, never()).update(any());
+        }
+
+        @Test
+        @DisplayName("allows updating only state when device is IN_USE")
+        void allowsUpdatingStateOfInUseDevice() {
+            Device inUseDevice = Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build();
+            Device updated = inUseDevice.toBuilder().state(DeviceState.AVAILABLE).build();
+            when(deviceRepository.findById(2L)).thenReturn(Optional.of(inUseDevice));
+            when(deviceRepository.update(any(Device.class))).thenReturn(updated);
+
+            Device result = deviceService.update(2L, null, null, DeviceState.AVAILABLE);
+
+            assertThat(result.getState()).isEqualTo(DeviceState.AVAILABLE);
+        }
+
+        @Test
+        @DisplayName("throws IllegalStateException when updating name of IN_USE device")
+        void throwsExceptionWhenUpdatingNameOfInUseDevice() {
+            Device inUseDevice = Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build();
+            when(deviceRepository.findById(2L)).thenReturn(Optional.of(inUseDevice));
+
+            assertThatThrownBy(() -> deviceService.update(2L, "New Name", null, null))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("in use");
+
+            verify(deviceRepository, never()).update(any());
+        }
+
+        @Test
+        @DisplayName("throws IllegalStateException when updating brand of IN_USE device")
+        void throwsExceptionWhenUpdatingBrandOfInUseDevice() {
+            Device inUseDevice = Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build();
+            when(deviceRepository.findById(2L)).thenReturn(Optional.of(inUseDevice));
+
+            assertThatThrownBy(() -> deviceService.update(2L, null, "Google", null))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("in use");
+
+            verify(deviceRepository, never()).update(any());
         }
     }
 }
