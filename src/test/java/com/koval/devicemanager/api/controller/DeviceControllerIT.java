@@ -57,13 +57,13 @@ class DeviceControllerIT {
     }
 
     @Nested
-    @DisplayName("POST /api/devices")
+    @DisplayName("POST /api/v1/devices")
     class Create {
 
         @Test
         @DisplayName("creates device and persists to database")
         void createsDeviceAndPersistsToDatabase() throws Exception {
-            mockMvc.perform(post("/api/devices")
+            mockMvc.perform(post("/api/v1/devices")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "iPhone 15", "brand": "Apple"}
@@ -84,7 +84,7 @@ class DeviceControllerIT {
     }
 
     @Nested
-    @DisplayName("PATCH /api/devices/{id}")
+    @DisplayName("PATCH /api/v1/devices/{id}")
     class Update {
 
         @Test
@@ -92,7 +92,7 @@ class DeviceControllerIT {
         void updatesDeviceAndPersistsToDatabase() throws Exception {
             DeviceEntity device = saveDevice("iPhone 15", "Apple", DeviceState.AVAILABLE);
 
-            mockMvc.perform(patch("/api/devices/" + device.getId())
+            mockMvc.perform(patch("/api/v1/devices/" + device.getId())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "iPhone 15 Pro", "state": "IN_USE"}
@@ -110,7 +110,7 @@ class DeviceControllerIT {
         @Test
         @DisplayName("returns 404 when device not found")
         void returns404WhenNotFound() throws Exception {
-            mockMvc.perform(patch("/api/devices/999")
+            mockMvc.perform(patch("/api/v1/devices/999")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "test"}
@@ -124,7 +124,7 @@ class DeviceControllerIT {
         void returns422WhenUpdatingNameOfInUseDevice() throws Exception {
             DeviceEntity device = saveDevice("Galaxy S24", "Samsung", DeviceState.IN_USE);
 
-            mockMvc.perform(patch("/api/devices/" + device.getId())
+            mockMvc.perform(patch("/api/v1/devices/" + device.getId())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "Galaxy S25"}
@@ -138,7 +138,7 @@ class DeviceControllerIT {
     }
 
     @Nested
-    @DisplayName("DELETE /api/devices/{id}")
+    @DisplayName("DELETE /api/v1/devices/{id}")
     class Delete {
 
         @Test
@@ -146,7 +146,7 @@ class DeviceControllerIT {
         void deletesDeviceFromDatabase() throws Exception {
             DeviceEntity device = saveDevice("Pixel 8", "Google", DeviceState.AVAILABLE);
 
-            mockMvc.perform(delete("/api/devices/" + device.getId()))
+            mockMvc.perform(delete("/api/v1/devices/" + device.getId()))
                     .andExpect(status().isNoContent());
 
             assertThat(jpaRepository.findById(device.getId())).isEmpty();
@@ -155,7 +155,7 @@ class DeviceControllerIT {
         @Test
         @DisplayName("returns 404 when device not found")
         void returns404WhenNotFound() throws Exception {
-            mockMvc.perform(delete("/api/devices/999"))
+            mockMvc.perform(delete("/api/v1/devices/999"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
@@ -165,7 +165,7 @@ class DeviceControllerIT {
         void returns422AndDoesNotDeleteInUseDevice() throws Exception {
             DeviceEntity device = saveDevice("Galaxy S24", "Samsung", DeviceState.IN_USE);
 
-            mockMvc.perform(delete("/api/devices/" + device.getId()))
+            mockMvc.perform(delete("/api/v1/devices/" + device.getId()))
                     .andExpect(status().isUnprocessableContent())
                     .andExpect(jsonPath("$.status").value(422));
 
@@ -174,7 +174,7 @@ class DeviceControllerIT {
     }
 
     @Nested
-    @DisplayName("GET /api/devices/{id}")
+    @DisplayName("GET /api/v1/devices/{id}")
     class GetById {
 
         @Test
@@ -182,7 +182,7 @@ class DeviceControllerIT {
         void returnsDeviceWhenFound() throws Exception {
             DeviceEntity device = saveDevice("iPhone 15", "Apple", DeviceState.AVAILABLE);
 
-            mockMvc.perform(get("/api/devices/" + device.getId()))
+            mockMvc.perform(get("/api/v1/devices/" + device.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(device.getId()))
                     .andExpect(jsonPath("$.name").value("iPhone 15"))
@@ -193,7 +193,7 @@ class DeviceControllerIT {
         @Test
         @DisplayName("returns 404 when not found")
         void returns404WhenNotFound() throws Exception {
-            mockMvc.perform(get("/api/devices/999"))
+            mockMvc.perform(get("/api/v1/devices/999"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404))
                     .andExpect(jsonPath("$.message").value("Device not found with id: 999"));
@@ -201,7 +201,7 @@ class DeviceControllerIT {
     }
 
     @Nested
-    @DisplayName("GET /api/devices")
+    @DisplayName("GET /api/v1/devices")
     class GetAll {
 
         @Test
@@ -211,7 +211,7 @@ class DeviceControllerIT {
             saveDevice("Galaxy S24", "Samsung", DeviceState.IN_USE);
             saveDevice("Pixel 8", "Google", DeviceState.INACTIVE);
 
-            mockMvc.perform(get("/api/devices"))
+            mockMvc.perform(get("/api/v1/devices"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.content").isArray())
@@ -225,7 +225,7 @@ class DeviceControllerIT {
             saveDevice("iPhone 14", "Apple", DeviceState.IN_USE);
             saveDevice("Galaxy S24", "Samsung", DeviceState.AVAILABLE);
 
-            mockMvc.perform(get("/api/devices").param("brand", "Apple"))
+            mockMvc.perform(get("/api/v1/devices").param("brand", "Apple"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalElements").value(2))
                     .andExpect(jsonPath("$.content[0].brand").value("Apple"))
@@ -239,7 +239,7 @@ class DeviceControllerIT {
             saveDevice("Galaxy S24", "Samsung", DeviceState.IN_USE);
             saveDevice("Pixel 8", "Google", DeviceState.AVAILABLE);
 
-            mockMvc.perform(get("/api/devices").param("state", "AVAILABLE"))
+            mockMvc.perform(get("/api/v1/devices").param("state", "AVAILABLE"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalElements").value(2))
                     .andExpect(jsonPath("$.content[0].state").value("AVAILABLE"))
@@ -249,7 +249,7 @@ class DeviceControllerIT {
         @Test
         @DisplayName("returns 400 when page size exceeds limit")
         void returns400WhenPageSizeExceedsLimit() throws Exception {
-            mockMvc.perform(get("/api/devices").param("size", "101"))
+            mockMvc.perform(get("/api/v1/devices").param("size", "101"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(400))
                     .andExpect(jsonPath("$.message").value("Requested page size 101 exceeds the maximum allowed size of 100"));

@@ -18,7 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/devices")
+@RequestMapping("/api/v1/devices")
 @RequiredArgsConstructor
 @Tag(name = "Devices", description = "Device management endpoints")
 public class DeviceController {

@@ -59,7 +59,7 @@ class DeviceControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/devices")
+    @DisplayName("POST /api/v1/devices")
     class Create {
 
         @Test
@@ -68,7 +68,7 @@ class DeviceControllerTest {
             Device created = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
             when(deviceService.create("iPhone 15", "Apple")).thenReturn(created);
 
-            mockMvc.perform(post("/api/devices")
+            mockMvc.perform(post("/api/v1/devices")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "iPhone 15", "brand": "Apple"}
@@ -81,7 +81,7 @@ class DeviceControllerTest {
     }
 
     @Nested
-    @DisplayName("PATCH /api/devices/{id}")
+    @DisplayName("PATCH /api/v1/devices/{id}")
     class Update {
 
         @Test
@@ -90,7 +90,7 @@ class DeviceControllerTest {
             Device updated = Device.builder().id(1L).name("iPhone 15 Pro").brand("Apple").state(DeviceState.IN_USE).createdAt(Instant.now()).build();
             when(deviceService.update(eq(1L), eq("iPhone 15 Pro"), isNull(), eq(DeviceState.IN_USE))).thenReturn(updated);
 
-            mockMvc.perform(patch("/api/devices/1")
+            mockMvc.perform(patch("/api/v1/devices/1")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "iPhone 15 Pro", "state": "IN_USE"}
@@ -107,7 +107,7 @@ class DeviceControllerTest {
             when(deviceService.update(eq(99L), any(), any(), any()))
                     .thenThrow(new DeviceNotFoundException(99L));
 
-            mockMvc.perform(patch("/api/devices/99")
+            mockMvc.perform(patch("/api/v1/devices/99")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "test"}
@@ -124,7 +124,7 @@ class DeviceControllerTest {
             when(deviceService.update(eq(2L), any(), any(), any()))
                     .thenThrow(new IllegalStateException("Name and brand cannot be updated while device is in use"));
 
-            mockMvc.perform(patch("/api/devices/2")
+            mockMvc.perform(patch("/api/v1/devices/2")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"name": "New Name"}
@@ -138,7 +138,7 @@ class DeviceControllerTest {
         @Test
         @DisplayName("returns 400 when explicit null field is provided")
         void returns400WhenNullFieldProvided() throws Exception {
-            mockMvc.perform(patch("/api/devices/1")
+            mockMvc.perform(patch("/api/v1/devices/1")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"state": null}
@@ -152,7 +152,7 @@ class DeviceControllerTest {
         @Test
         @DisplayName("returns 400 when invalid state value is provided")
         void returns400WhenInvalidStateProvided() throws Exception {
-            mockMvc.perform(patch("/api/devices/1")
+            mockMvc.perform(patch("/api/v1/devices/1")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"state": "INVALID"}
@@ -165,7 +165,7 @@ class DeviceControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/devices/{id}")
+    @DisplayName("DELETE /api/v1/devices/{id}")
     class Delete {
 
         @Test
@@ -173,7 +173,7 @@ class DeviceControllerTest {
         void returns204WhenDeleted() throws Exception {
             doNothing().when(deviceService).delete(1L);
 
-            mockMvc.perform(delete("/api/devices/1"))
+            mockMvc.perform(delete("/api/v1/devices/1"))
                     .andExpect(status().isNoContent());
         }
 
@@ -182,7 +182,7 @@ class DeviceControllerTest {
         void returns404WhenNotFound() throws Exception {
             doThrow(new DeviceNotFoundException(99L)).when(deviceService).delete(99L);
 
-            mockMvc.perform(delete("/api/devices/99"))
+            mockMvc.perform(delete("/api/v1/devices/99"))
                     .andExpect(status().isNotFound())
                     .andExpect(content().json("""
                             {"status": 404, "message": "Device not found with id: 99"}
@@ -194,7 +194,7 @@ class DeviceControllerTest {
         void returns422WhenDeviceIsInUse() throws Exception {
             doThrow(new IllegalStateException("Device cannot be deleted while it is in use")).when(deviceService).delete(2L);
 
-            mockMvc.perform(delete("/api/devices/2"))
+            mockMvc.perform(delete("/api/v1/devices/2"))
                     .andExpect(status().isUnprocessableContent())
                     .andExpect(content().json("""
                             {"status": 422, "message": "Device cannot be deleted while it is in use"}
@@ -203,7 +203,7 @@ class DeviceControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/devices/{id}")
+    @DisplayName("GET /api/v1/devices/{id}")
     class GetById {
 
         @Test
@@ -212,7 +212,7 @@ class DeviceControllerTest {
             Device iphone = Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build();
             when(deviceService.getById(1L)).thenReturn(iphone);
 
-            mockMvc.perform(get("/api/devices/1"))
+            mockMvc.perform(get("/api/v1/devices/1"))
                     .andExpect(status().isOk())
                     .andExpect(content().json("""
                             {
@@ -229,7 +229,7 @@ class DeviceControllerTest {
         void returns404WhenNotFound() throws Exception {
             when(deviceService.getById(99L)).thenThrow(new DeviceNotFoundException(99L));
 
-            mockMvc.perform(get("/api/devices/99"))
+            mockMvc.perform(get("/api/v1/devices/99"))
                     .andExpect(status().isNotFound())
                     .andExpect(content().json("""
                             {
@@ -241,7 +241,7 @@ class DeviceControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/devices")
+    @DisplayName("GET /api/v1/devices")
     class GetAll {
 
         @Test
@@ -254,7 +254,7 @@ class DeviceControllerTest {
             );
             when(deviceService.getAll(any(Pageable.class))).thenReturn(new PageImpl<>(deviceList, PageRequest.of(0, 10), deviceList.size()));
 
-            mockMvc.perform(get("/api/devices"))
+            mockMvc.perform(get("/api/v1/devices"))
                     .andExpect(status().isOk())
                     .andExpect(content().json("""
                             {
@@ -281,7 +281,7 @@ class DeviceControllerTest {
             );
             when(deviceService.getAllByBrand(eq("Apple"), any(Pageable.class))).thenReturn(new PageImpl<>(appleDevices, PageRequest.of(0, 10), appleDevices.size()));
 
-            mockMvc.perform(get("/api/devices").param("brand", "Apple"))
+            mockMvc.perform(get("/api/v1/devices").param("brand", "Apple"))
                     .andExpect(status().isOk())
                     .andExpect(content().json("""
                             {
@@ -305,7 +305,7 @@ class DeviceControllerTest {
             );
             when(deviceService.getAllByState(eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(new PageImpl<>(availableDevices, PageRequest.of(0, 10), availableDevices.size()));
 
-            mockMvc.perform(get("/api/devices").param("state", "AVAILABLE"))
+            mockMvc.perform(get("/api/v1/devices").param("state", "AVAILABLE"))
                     .andExpect(status().isOk())
                     .andExpect(content().json("""
                             {
@@ -325,7 +325,7 @@ class DeviceControllerTest {
             when(deviceService.getAll(any(Pageable.class)))
                     .thenThrow(new PageSizeExceededException(101, 100));
 
-            mockMvc.perform(get("/api/devices").param("size", "101"))
+            mockMvc.perform(get("/api/v1/devices").param("size", "101"))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().json("""
                             {
