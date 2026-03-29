@@ -90,6 +90,23 @@ Content-Type: application/json
 
 Both `name` and `brand` are required, max 255 characters, and must contain at least one letter or number (special characters allowed). The device is created with state `AVAILABLE`. Returns `201 Created`.
 
+### Create multiple devices
+
+```
+POST /api/v1/devices/batch
+Content-Type: application/json
+
+{
+  "devices": [
+    {"name": "iPhone 15", "brand": "Apple"},
+    {"name": "Galaxy S24", "brand": "Samsung"},
+    {"name": "Pixel 8", "brand": "Google"}
+  ]
+}
+```
+
+Creates up to 100 devices in a single request. All devices are created with state `AVAILABLE`. Returns `201 Created` with a list of created devices.
+
 ### Get a device
 
 ```
@@ -104,15 +121,17 @@ Returns `404` if the device does not exist.
 GET /api/v1/devices
 ```
 
-Supports optional filtering and pagination:
+Supports optional filtering and pagination. Filters can be combined:
 
-| Parameter | Description                        | Example         |
-|-----------|------------------------------------|-----------------|
-| `brand`   | Filter by brand (case-insensitive) | `?brand=Apple`  |
-| `state`   | Filter by state                    | `?state=IN_USE` |
-| `page`    | Page number (0-based)              | `?page=0`       |
-| `size`    | Page size (capped at 100)          | `?size=20`      |
-| `sort`    | Sort by field and direction        | `?sort=name,asc`|
+| Parameter | Description                        | Example                              |
+|-----------|------------------------------------|--------------------------------------|
+| `brand`   | Filter by brand (case-insensitive) | `?brand=Apple`                       |
+| `state`   | Filter by state                    | `?state=IN_USE`                      |
+| `page`    | Page number (0-based)              | `?page=0`                            |
+| `size`    | Page size (capped at 100)          | `?size=20`                           |
+| `sort`    | Sort by field and direction        | `?sort=name,asc`                     |
+
+Example combined filter: `GET /api/v1/devices?brand=Apple&state=AVAILABLE`
 
 Valid states: `AVAILABLE`, `IN_USE`, `INACTIVE`
 
@@ -141,11 +160,25 @@ DELETE /api/v1/devices/{id}
 
 Returns `204` on success, `404` if not found, `422` if the device is `IN_USE`.
 
+### Delete multiple devices
+
+```
+DELETE /api/v1/devices/batch
+Content-Type: application/json
+
+{
+  "ids": [1, 2, 3]
+}
+```
+
+Deletes up to 100 devices in a single request. The operation is all-or-nothing: if any device is not found or is `IN_USE`, no devices are deleted. Returns `204` on success, `404` if any ID is not found, `422` if any device is `IN_USE`.
+
 ## Domain Rules
 
 - Devices are always created with state `AVAILABLE`.
 - `name` and `brand` cannot be changed while a device is `IN_USE`. Only `state` can be updated.
 - `IN_USE` devices cannot be deleted.
+- Deletion is soft: the record is retained in the database with a `deleted_at` timestamp and is no longer returned by any API endpoint.
 - `createdAt` is set automatically on creation and is immutable.
 - `updatedAt` is set automatically on each update.
 
