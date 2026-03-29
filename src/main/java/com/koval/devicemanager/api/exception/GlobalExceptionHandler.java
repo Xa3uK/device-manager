@@ -2,6 +2,7 @@ package com.koval.devicemanager.api.exception;
 
 import tools.jackson.databind.exc.InvalidFormatException;
 import tools.jackson.databind.exc.InvalidNullException;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
 import com.koval.devicemanager.api.dto.response.ErrorResponse;
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,6 +47,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        if (ex.getCause() instanceof UnrecognizedPropertyException cause) {
+            return badRequest("Unknown field '" + cause.getPropertyName() + "'", request);
+        }
         if (ex.getCause() instanceof InvalidNullException cause) {
             return nullFieldError(cause, request);
         }

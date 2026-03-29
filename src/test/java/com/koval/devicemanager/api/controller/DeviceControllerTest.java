@@ -18,8 +18,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 import java.util.List;
@@ -51,9 +54,14 @@ class DeviceControllerTest {
 
     @BeforeEach
     void setUp() {
+        JsonMapper objectMapper = JsonMapper.builder()
+                .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
+
         mockMvc = MockMvcBuilders.standaloneSetup(deviceController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
                 .build();
     }
 
@@ -75,6 +83,20 @@ class DeviceControllerTest {
                     .andExpect(status().isCreated())
                     .andExpect(content().json("""
                             {"id": 1, "name": "iPhone 15", "brand": "Apple", "state": "AVAILABLE"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 400 when unknown field is provided")
+        void returns400WhenUnknownFieldProvided() throws Exception {
+            mockMvc.perform(post("/api/v1/devices")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"name": "iPhone 15", "brand": "Apple", "id": 1}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().json("""
+                            {"status": 400, "message": "Unknown field 'id'"}
                             """));
         }
     }
@@ -131,6 +153,20 @@ class DeviceControllerTest {
                     .andExpect(status().isUnprocessableContent())
                     .andExpect(content().json("""
                             {"status": 422, "message": "Name and brand cannot be updated while device is in use"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 400 when unknown field is provided")
+        void returns400WhenUnknownFieldProvided() throws Exception {
+            mockMvc.perform(patch("/api/v1/devices/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"id": 4}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().json("""
+                            {"status": 400, "message": "Unknown field 'id'"}
                             """));
         }
 
