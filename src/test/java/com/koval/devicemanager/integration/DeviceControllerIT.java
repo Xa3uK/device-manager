@@ -57,6 +57,80 @@ class DeviceControllerIT {
     }
 
     @Nested
+    @DisplayName("POST /api/v1/devices/batch")
+    class CreateBulk {
+
+        @Test
+        @DisplayName("creates all devices and persists to database")
+        void createsAllDevicesAndPersistsToDatabase() throws Exception {
+            mockMvc.perform(post("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"devices": [
+                                      {"name": "iPhone 15", "brand": "Apple"},
+                                      {"name": "Galaxy S24", "brand": "Samsung"},
+                                      {"name": "Pixel 8", "brand": "Google"}
+                                    ]}
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.length()").value(3))
+                    .andExpect(jsonPath("$[0].state").value("AVAILABLE"))
+                    .andExpect(jsonPath("$[1].state").value("AVAILABLE"))
+                    .andExpect(jsonPath("$[2].state").value("AVAILABLE"));
+
+            assertThat(jpaRepository.count()).isEqualTo(3);
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /api/v1/devices/batch")
+    class DeleteBulk {
+
+        @Test
+        @DisplayName("deletes all devices from database")
+        void deletesAllDevicesFromDatabase() throws Exception {
+            DeviceEntity d1 = saveDevice("iPhone 15", "Apple", DeviceState.AVAILABLE);
+            DeviceEntity d2 = saveDevice("Pixel 8", "Google", DeviceState.INACTIVE);
+
+            mockMvc.perform(delete("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"ids\": [" + d1.getId() + ", " + d2.getId() + "]}"))
+                    .andExpect(status().isNoContent());
+
+            assertThat(jpaRepository.count()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("returns 404 when any device not found")
+        void returns404WhenAnyNotFound() throws Exception {
+            DeviceEntity d1 = saveDevice("iPhone 15", "Apple", DeviceState.AVAILABLE);
+
+            mockMvc.perform(delete("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"ids\": [" + d1.getId() + ", 999]}"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.status").value(404));
+
+            assertThat(jpaRepository.count()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("returns 422 and deletes nothing when any device is IN_USE")
+        void returns422AndDeletesNothingWhenAnyInUse() throws Exception {
+            DeviceEntity available = saveDevice("iPhone 15", "Apple", DeviceState.AVAILABLE);
+            DeviceEntity inUse = saveDevice("Galaxy S24", "Samsung", DeviceState.IN_USE);
+
+            mockMvc.perform(delete("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"ids\": [" + available.getId() + ", " + inUse.getId() + "]}"))
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(jsonPath("$.status").value(422));
+
+            assertThat(jpaRepository.count()).isEqualTo(2);
+        }
+    }
+
+    @Nested
     @DisplayName("POST /api/v1/devices")
     class Create {
 

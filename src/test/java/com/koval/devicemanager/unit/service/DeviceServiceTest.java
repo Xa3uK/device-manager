@@ -2,6 +2,7 @@ package com.koval.devicemanager.unit.service;
 
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
 import com.koval.devicemanager.domain.model.Device;
+import com.koval.devicemanager.domain.model.DeviceInput;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.repository.DeviceRepository;
 import com.koval.devicemanager.domain.service.DeviceService;
@@ -37,6 +38,79 @@ class DeviceServiceTest {
 
     @InjectMocks
     private DeviceService deviceService;
+
+    @Nested
+    @DisplayName("createBulk")
+    class CreateBulk {
+
+        @Test
+        @DisplayName("creates all devices with AVAILABLE state")
+        void createsAllDevicesWithAvailableState() {
+            List<Device> saved = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build()
+            );
+            when(deviceRepository.saveAll(any())).thenReturn(saved);
+
+            List<Device> result = deviceService.createBulk(List.of(
+                    new DeviceInput("iPhone 15", "Apple"),
+                    new DeviceInput("Galaxy S24", "Samsung")
+            ));
+
+            assertThat(result).hasSize(2);
+            assertThat(result).allMatch(d -> d.getState() == DeviceState.AVAILABLE);
+            verify(deviceRepository).saveAll(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteBulk")
+    class DeleteBulk {
+
+        @Test
+        @DisplayName("deletes all devices successfully")
+        void deletesAllDevicesSuccessfully() {
+            List<Device> devices = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Pixel 8").brand("Google").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
+            );
+            when(deviceRepository.findAllById(List.of(1L, 2L))).thenReturn(devices);
+
+            deviceService.deleteBulk(List.of(1L, 2L));
+
+            verify(deviceRepository).deleteAll(List.of(1L, 2L));
+        }
+
+        @Test
+        @DisplayName("throws DeviceNotFoundException when any ID is not found")
+        void throwsWhenAnyIdNotFound() {
+            when(deviceRepository.findAllById(List.of(1L, 99L))).thenReturn(
+                    List.of(Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build())
+            );
+
+            assertThatThrownBy(() -> deviceService.deleteBulk(List.of(1L, 99L)))
+                    .isInstanceOf(DeviceNotFoundException.class)
+                    .hasMessageContaining("99");
+
+            verify(deviceRepository, never()).deleteAll(any());
+        }
+
+        @Test
+        @DisplayName("throws IllegalStateException when any device is IN_USE")
+        void throwsWhenAnyDeviceIsInUse() {
+            List<Device> devices = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build()
+            );
+            when(deviceRepository.findAllById(List.of(1L, 2L))).thenReturn(devices);
+
+            assertThatThrownBy(() -> deviceService.deleteBulk(List.of(1L, 2L)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("2");
+
+            verify(deviceRepository, never()).deleteAll(any());
+        }
+    }
 
     @Nested
     @DisplayName("create")

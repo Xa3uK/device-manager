@@ -1,5 +1,7 @@
 package com.koval.devicemanager.api.controller;
 
+import com.koval.devicemanager.api.dto.request.BulkCreateRequest;
+import com.koval.devicemanager.api.dto.request.BulkDeleteRequest;
 import com.koval.devicemanager.api.dto.request.CreateDeviceRequest;
 import com.koval.devicemanager.api.dto.request.UpdateDeviceRequest;
 import com.koval.devicemanager.api.dto.response.DeviceResponse;
@@ -15,9 +17,31 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequestMapping("/api/v1/devices")
 @Tag(name = "Devices", description = "Device management endpoints")
 public interface DeviceApi {
+
+    @Operation(summary = "Create multiple devices")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Devices created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body")
+    })
+    @PostMapping("/batch")
+    @ResponseStatus(HttpStatus.CREATED)
+    List<DeviceResponse> createBulk(@RequestBody BulkCreateRequest request);
+
+    @Operation(summary = "Delete multiple devices")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Devices deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body"),
+            @ApiResponse(responseCode = "404", description = "One or more devices not found"),
+            @ApiResponse(responseCode = "422", description = "One or more devices are in use")
+    })
+    @DeleteMapping("/batch")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void deleteBulk(@RequestBody BulkDeleteRequest request);
 
     @Operation(summary = "Create a new device")
     @ApiResponses({

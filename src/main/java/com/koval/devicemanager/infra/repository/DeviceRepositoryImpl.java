@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,6 +27,12 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
+    public List<Device> saveAll(List<Device> devices) {
+        return jpaRepository.saveAll(devices.stream().map(mapper::toEntity).toList())
+                .stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
     public Device update(Device device) {
         DeviceEntity entity = jpaRepository.findById(device.getId())
                 .orElseThrow(() -> new DeviceNotFoundException(device.getId()));
@@ -36,6 +43,11 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public Optional<Device> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Device> findAllById(List<Long> ids) {
+        return jpaRepository.findAllById(ids).stream().map(mapper::toDomain).toList();
     }
 
     @Override
@@ -56,5 +68,10 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public void delete(Long id) {
         jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteAll(List<Long> ids) {
+        jpaRepository.deleteAllByIdInBatch(ids);
     }
 }

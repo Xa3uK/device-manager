@@ -4,6 +4,7 @@ import com.koval.devicemanager.api.controller.DeviceController;
 import com.koval.devicemanager.api.exception.GlobalExceptionHandler;
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
 import com.koval.devicemanager.domain.model.Device;
+import com.koval.devicemanager.domain.model.DeviceInput;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.service.DeviceService;
 import com.koval.devicemanager.infra.converter.StringToDeviceStateConverter;
@@ -36,6 +37,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -71,6 +73,125 @@ class DeviceControllerTest {
                 .setMessageConverters(new JacksonJsonHttpMessageConverter(objectMapper))
                 .setConversionService(conversionService)
                 .build();
+    }
+
+    @Nested
+    @DisplayName("POST /api/v1/devices/batch")
+    class CreateBulk {
+
+        @Test
+        @DisplayName("returns 201 with list of created devices")
+        void returns201WithCreatedDevices() throws Exception {
+            List<Device> created = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build()
+            );
+            when(deviceService.createBulk(List.of(
+                    new DeviceInput("iPhone 15", "Apple"),
+                    new DeviceInput("Galaxy S24", "Samsung")
+            ))).thenReturn(created);
+
+            mockMvc.perform(post("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"devices": [
+                                      {"name": "iPhone 15", "brand": "Apple"},
+                                      {"name": "Galaxy S24", "brand": "Samsung"}
+                                    ]}
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andExpect(content().json("""
+                            [
+                              {"id": 1, "name": "iPhone 15",  "brand": "Apple",   "state": "AVAILABLE"},
+                              {"id": 2, "name": "Galaxy S24", "brand": "Samsung", "state": "AVAILABLE"}
+                            ]
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 400 when devices list is empty")
+        void returns400WhenDevicesListIsEmpty() throws Exception {
+            mockMvc.perform(post("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"devices": []}
+                                    """))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("returns 400 when a device in the list is invalid")
+        void returns400WhenDeviceInListIsInvalid() throws Exception {
+            mockMvc.perform(post("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"devices": [
+                                      {"name": "", "brand": "Apple"}
+                                    ]}
+                                    """))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /api/v1/devices/batch")
+    class DeleteBulk {
+
+        @Test
+        @DisplayName("returns 204 when all devices deleted")
+        void returns204WhenAllDeleted() throws Exception {
+            mockMvc.perform(delete("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"ids": [1, 2, 3]}
+                                    """))
+                    .andExpect(status().isNoContent());
+
+            verify(deviceService).deleteBulk(List.of(1L, 2L, 3L));
+        }
+
+        @Test
+        @DisplayName("returns 404 when any device not found")
+        void returns404WhenAnyNotFound() throws Exception {
+            doThrow(new DeviceNotFoundException(List.of(99L))).when(deviceService).deleteBulk(any());
+
+            mockMvc.perform(delete("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"ids": [1, 99]}
+                                    """))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().json("""
+                            {"status": 404, "message": "Devices not found with ids: 99"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 422 when any device is IN_USE")
+        void returns422WhenAnyDeviceIsInUse() throws Exception {
+            doThrow(new IllegalStateException("Cannot delete devices in use: 2")).when(deviceService).deleteBulk(any());
+
+            mockMvc.perform(delete("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"ids": [1, 2]}
+                                    """))
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(content().json("""
+                            {"status": 422, "message": "Cannot delete devices in use: 2"}
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 400 when ids list is empty")
+        void returns400WhenIdsListIsEmpty() throws Exception {
+            mockMvc.perform(delete("/api/v1/devices/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"ids": []}
+                                    """))
+                    .andExpect(status().isBadRequest());
+        }
     }
 
     @Nested
