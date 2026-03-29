@@ -7,11 +7,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "devices")
+@SQLRestriction("deleted_at IS NULL")
 @Data
 @Builder
 @NoArgsConstructor
@@ -39,6 +41,10 @@ public class DeviceEntity {
     @Setter(lombok.AccessLevel.NONE)
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Setter(lombok.AccessLevel.NONE)
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     @PrePersist
     private void prePersist() {

@@ -66,11 +66,11 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public void delete(Long id) {
-        jpaRepository.deleteById(id);
+        jpaRepository.softDeleteById(id);
     }
 
     @Override
     public void deleteAll(List<Long> ids) {
-        jpaRepository.deleteAllByIdInBatch(ids);
+        jpaRepository.softDeleteAllByIdIn(ids);
     }
 }

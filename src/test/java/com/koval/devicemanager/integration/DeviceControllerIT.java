@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,6 +45,9 @@ class DeviceControllerIT {
     @Autowired
     private DeviceJpaRepository jpaRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -54,6 +58,12 @@ class DeviceControllerIT {
 
     private DeviceEntity saveDevice(String name, String brand, DeviceState state) {
         return jpaRepository.save(DeviceEntity.builder().name(name).brand(brand).state(state).build());
+    }
+
+    private boolean isSoftDeleted(Long id) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM devices WHERE id = ? AND deleted_at IS NOT NULL", Integer.class, id);
+        return count != null && count > 0;
     }
 
     @Nested
@@ -87,8 +97,8 @@ class DeviceControllerIT {
     class DeleteBulk {
 
         @Test
-        @DisplayName("deletes all devices from database")
-        void deletesAllDevicesFromDatabase() throws Exception {
+        @DisplayName("soft deletes all devices")
+        void softDeletesAllDevices() throws Exception {
             DeviceEntity d1 = saveDevice("iPhone 15", "Apple", DeviceState.AVAILABLE);
             DeviceEntity d2 = saveDevice("Pixel 8", "Google", DeviceState.INACTIVE);
 
@@ -98,6 +108,8 @@ class DeviceControllerIT {
                     .andExpect(status().isNoContent());
 
             assertThat(jpaRepository.count()).isEqualTo(0);
+            assertThat(isSoftDeleted(d1.getId())).isTrue();
+            assertThat(isSoftDeleted(d2.getId())).isTrue();
         }
 
         @Test
@@ -216,14 +228,15 @@ class DeviceControllerIT {
     class Delete {
 
         @Test
-        @DisplayName("deletes device from database")
-        void deletesDeviceFromDatabase() throws Exception {
+        @DisplayName("soft deletes device")
+        void softDeletesDevice() throws Exception {
             DeviceEntity device = saveDevice("Pixel 8", "Google", DeviceState.AVAILABLE);
 
             mockMvc.perform(delete("/api/v1/devices/" + device.getId()))
                     .andExpect(status().isNoContent());
 
             assertThat(jpaRepository.findById(device.getId())).isEmpty();
+            assertThat(isSoftDeleted(device.getId())).isTrue();
         }
 
         @Test
