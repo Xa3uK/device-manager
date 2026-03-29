@@ -10,6 +10,7 @@ A REST API for managing devices built with Spring Boot 4 and PostgreSQL.
 - **Flyway** — database migrations
 - **Lombok** — boilerplate reduction
 - **springdoc-openapi** — API documentation
+- **Spring Boot Actuator** — health and monitoring endpoints
 - **Testcontainers** — integration testing against real PostgreSQL
 
 ## Running with Docker
@@ -69,6 +70,8 @@ Swagger UI is available at: http://localhost:8080/swagger-ui.html
 
 OpenAPI JSON spec: http://localhost:8080/v3/api-docs
 
+Health check: http://localhost:8080/actuator/health
+
 ## API Reference
 
 All endpoints are under `/api/v1/devices`.
@@ -85,7 +88,7 @@ Content-Type: application/json
 }
 ```
 
-The device is created with state `AVAILABLE`. Returns `201 Created`.
+Both `name` and `brand` are required, max 255 characters. The device is created with state `AVAILABLE`. Returns `201 Created`.
 
 ### Get a device
 
@@ -108,7 +111,7 @@ Supports optional filtering and pagination:
 | `brand`   | Filter by brand (case-insensitive) | `?brand=Apple`  |
 | `state`   | Filter by state                    | `?state=IN_USE` |
 | `page`    | Page number (0-based)              | `?page=0`       |
-| `size`    | Page size (max 100)                | `?size=20`      |
+| `size`    | Page size (capped at 100)          | `?size=20`      |
 | `sort`    | Sort by field and direction        | `?sort=name,asc`|
 
 Valid states: `AVAILABLE`, `IN_USE`, `INACTIVE`
@@ -128,7 +131,7 @@ Content-Type: application/json
 }
 ```
 
-All fields are optional. Omitted fields are left unchanged. Returns `404` if not found, `422` if trying to update `name` or `brand` while the device is `IN_USE`.
+All fields are optional. Omitted fields are left unchanged. If provided, `name` and `brand` must be non-empty, max 255 characters. Returns `404` if not found, `422` if trying to update `name` or `brand` while the device is `IN_USE`.
 
 ### Delete a device
 
