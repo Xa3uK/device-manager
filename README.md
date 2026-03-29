@@ -25,7 +25,7 @@ This starts two containers:
 - `device-manager-db` — PostgreSQL 17 on port `5432`
 - `device-manager-app` — Spring Boot app on port `8080`
 
-The app waits for the database to be healthy before starting. Flyway applies all migrations automatically on startup, including seed data with 30 sample devices.
+The app waits for the database to be healthy before starting. Flyway applies all migrations automatically on startup, including seed data with 150 sample devices.
 
 To stop and remove containers:
 
@@ -88,7 +88,7 @@ Content-Type: application/json
 }
 ```
 
-Both `name` and `brand` are required, max 255 characters. The device is created with state `AVAILABLE`. Returns `201 Created`.
+Both `name` and `brand` are required, max 255 characters, and must contain at least one letter or number (special characters allowed). The device is created with state `AVAILABLE`. Returns `201 Created`.
 
 ### Get a device
 
@@ -131,7 +131,7 @@ Content-Type: application/json
 }
 ```
 
-All fields are optional. Omitted fields are left unchanged. If provided, `name` and `brand` must be non-empty, max 255 characters. Returns `404` if not found, `422` if trying to update `name` or `brand` while the device is `IN_USE`.
+All fields are optional. Omitted fields are left unchanged. If provided, `name` and `brand` must be non-empty, max 255 characters, and contain at least one letter or number (special characters allowed). Returns `404` if not found, `422` if trying to update `name` or `brand` while the device is `IN_USE`.
 
 ### Delete a device
 
