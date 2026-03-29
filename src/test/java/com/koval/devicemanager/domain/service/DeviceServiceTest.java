@@ -1,7 +1,6 @@
 package com.koval.devicemanager.domain.service;
 
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
-import com.koval.devicemanager.domain.exception.PageSizeExceededException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.repository.DeviceRepository;
@@ -25,6 +24,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -111,16 +111,14 @@ class DeviceServiceTest {
         }
 
         @Test
-        @DisplayName("throws PageSizeExceededException when page size exceeds limit")
-        void throwsExceptionWhenPageSizeExceedsLimit() {
+        @DisplayName("clamps page size to maximum when exceeded")
+        void clampsPageSizeWhenExceeded() {
             Pageable pageable = PageRequest.of(0, 101);
+            when(deviceRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
 
-            assertThatThrownBy(() -> deviceService.getAll(pageable))
-                    .isInstanceOf(PageSizeExceededException.class)
-                    .hasMessageContaining("Requested page size 101")
-                    .hasMessageContaining("exceeds the maximum allowed size of 100");
+            deviceService.getAll(pageable);
 
-            verifyNoInteractions(deviceRepository);
+            verify(deviceRepository).findAll(argThat(p -> p.getPageSize() == 100));
         }
     }
 
@@ -147,14 +145,14 @@ class DeviceServiceTest {
         }
 
         @Test
-        @DisplayName("throws PageSizeExceededException when page size exceeds limit")
-        void throwsExceptionWhenPageSizeExceedsLimit() {
+        @DisplayName("clamps page size to maximum when exceeded")
+        void clampsPageSizeWhenExceeded() {
             Pageable pageable = PageRequest.of(0, 101);
+            when(deviceRepository.findAllByBrand(eq("Apple"), any(Pageable.class))).thenReturn(Page.empty());
 
-            assertThatThrownBy(() -> deviceService.getAllByBrand("Apple", pageable))
-                    .isInstanceOf(PageSizeExceededException.class);
+            deviceService.getAllByBrand("Apple", pageable);
 
-            verifyNoInteractions(deviceRepository);
+            verify(deviceRepository).findAllByBrand(eq("Apple"), argThat(p -> p.getPageSize() == 100));
         }
     }
 
@@ -182,14 +180,14 @@ class DeviceServiceTest {
         }
 
         @Test
-        @DisplayName("throws PageSizeExceededException when page size exceeds limit")
-        void throwsExceptionWhenPageSizeExceedsLimit() {
+        @DisplayName("clamps page size to maximum when exceeded")
+        void clampsPageSizeWhenExceeded() {
             Pageable pageable = PageRequest.of(0, 101);
+            when(deviceRepository.findAllByState(eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(Page.empty());
 
-            assertThatThrownBy(() -> deviceService.getAllByState(DeviceState.AVAILABLE, pageable))
-                    .isInstanceOf(PageSizeExceededException.class);
+            deviceService.getAllByState(DeviceState.AVAILABLE, pageable);
 
-            verifyNoInteractions(deviceRepository);
+            verify(deviceRepository).findAllByState(eq(DeviceState.AVAILABLE), argThat(p -> p.getPageSize() == 100));
         }
     }
 

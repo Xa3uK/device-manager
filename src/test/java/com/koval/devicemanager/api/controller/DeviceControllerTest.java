@@ -2,7 +2,6 @@ package com.koval.devicemanager.api.controller;
 
 import com.koval.devicemanager.api.exception.GlobalExceptionHandler;
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
-import com.koval.devicemanager.domain.exception.PageSizeExceededException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.service.DeviceService;
@@ -320,19 +319,12 @@ class DeviceControllerTest {
         }
 
         @Test
-        @DisplayName("returns 400 when page size exceeds limit")
-        void returns400WhenPageSizeExceedsLimit() throws Exception {
-            when(deviceService.getAll(any(Pageable.class)))
-                    .thenThrow(new PageSizeExceededException(101, 100));
+        @DisplayName("returns 200 when page size exceeds limit (clamped by service)")
+        void returns200WhenPageSizeExceedsLimit() throws Exception {
+            when(deviceService.getAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
             mockMvc.perform(get("/api/v1/devices").param("size", "101"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().json("""
-                            {
-                              "status": 400,
-                              "message": "Requested page size 101 exceeds the maximum allowed size of 100"
-                            }
-                            """));
+                    .andExpect(status().isOk());
         }
     }
 }

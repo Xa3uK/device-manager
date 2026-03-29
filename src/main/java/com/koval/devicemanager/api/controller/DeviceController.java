@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,7 @@ public class DeviceController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public DeviceResponse create(@RequestBody CreateDeviceRequest request) {
+    public DeviceResponse create(@Valid @RequestBody CreateDeviceRequest request) {
         return new DeviceResponse(deviceService.create(request.getName(), request.getBrand()));
     }
 
@@ -46,7 +47,7 @@ public class DeviceController {
     @PatchMapping("/{id}")
     public DeviceResponse update(
             @Parameter(description = "Device ID") @PathVariable Long id,
-            @RequestBody UpdateDeviceRequest request) {
+            @Valid @RequestBody UpdateDeviceRequest request) {
         return new DeviceResponse(
                 deviceService.update(id, request.getName(), request.getBrand(), request.getState())
         );
