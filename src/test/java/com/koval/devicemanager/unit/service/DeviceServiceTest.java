@@ -1,9 +1,10 @@
-package com.koval.devicemanager.domain.service;
+package com.koval.devicemanager.unit.service;
 
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.repository.DeviceRepository;
+import com.koval.devicemanager.domain.service.DeviceService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

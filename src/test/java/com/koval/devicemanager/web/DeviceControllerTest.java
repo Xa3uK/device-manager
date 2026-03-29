@@ -1,10 +1,12 @@
-package com.koval.devicemanager.api.controller;
+package com.koval.devicemanager.web;
 
+import com.koval.devicemanager.api.controller.DeviceController;
 import com.koval.devicemanager.api.exception.GlobalExceptionHandler;
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.service.DeviceService;
+import com.koval.devicemanager.infra.converter.StringToDeviceStateConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import com.koval.devicemanager.infra.converter.StringToDeviceStateConverter;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.format.support.FormattingConversionService;

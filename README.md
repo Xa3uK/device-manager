@@ -151,18 +151,22 @@ Returns `204` on success, `404` if not found, `422` if the device is `IN_USE`.
 
 ## Running Tests
 
-Unit and web layer tests (no Docker required):
+Unit tests (no Docker required):
 
 ```bash
-./gradlew test --tests "com.koval.devicemanager.domain.service.*"
-./gradlew test --tests "com.koval.devicemanager.infra.mapper.*"
-./gradlew test --tests "com.koval.devicemanager.api.controller.DeviceControllerTest"
+./gradlew test --tests "com.koval.devicemanager.unit.*"
+```
+
+Web layer tests (no Docker required):
+
+```bash
+./gradlew test --tests "com.koval.devicemanager.web.*"
 ```
 
 Integration tests (requires Docker for Testcontainers):
 
 ```bash
-./gradlew test --tests "com.koval.devicemanager.api.controller.DeviceControllerIT"
+./gradlew test --tests "com.koval.devicemanager.integration.*"
 ```
 
 Full test suite:

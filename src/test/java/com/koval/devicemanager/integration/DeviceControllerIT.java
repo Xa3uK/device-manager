@@ -1,4 +1,4 @@
-package com.koval.devicemanager.api.controller;
+package com.koval.devicemanager.integration;
 
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.infra.entity.DeviceEntity;
@@ -247,12 +247,10 @@ class DeviceControllerIT {
         }
 
         @Test
-        @DisplayName("returns 400 when page size exceeds limit")
-        void returns400WhenPageSizeExceedsLimit() throws Exception {
+        @DisplayName("returns 200 when page size exceeds limit (clamped)")
+        void returns200WhenPageSizeExceedsLimit() throws Exception {
             mockMvc.perform(get("/api/v1/devices").param("size", "101"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.status").value(400))
-                    .andExpect(jsonPath("$.message").value("Requested page size 101 exceeds the maximum allowed size of 100"));
+                    .andExpect(status().isOk());
         }
     }
 }

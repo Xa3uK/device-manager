@@ -1,8 +1,9 @@
-package com.koval.devicemanager.infra.mapper;
+package com.koval.devicemanager.unit.mapper;
 
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.infra.entity.DeviceEntity;
+import com.koval.devicemanager.infra.mapper.DeviceMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
