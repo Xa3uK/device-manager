@@ -5,6 +5,7 @@ import tools.jackson.databind.exc.InvalidNullException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 import com.koval.devicemanager.api.dto.response.ErrorResponse;
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
+import com.koval.devicemanager.domain.exception.InvalidDeviceStateException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.core.PropertyReferenceException;
@@ -33,6 +34,12 @@ public class GlobalExceptionHandler {
             ex.getMessage(),
             request.getRequestURI()
         );
+    }
+
+    @ExceptionHandler(InvalidDeviceStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidDeviceState(InvalidDeviceStateException ex, HttpServletRequest request) {
+        return badRequest(ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

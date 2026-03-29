@@ -4,6 +4,7 @@ import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.infra.entity.DeviceEntity;
 import org.springframework.stereotype.Component;
 
+// We could use MapStruct lib in the future, if models become larger or their amount increased significantly
 @Component
 public class DeviceMapper {
 

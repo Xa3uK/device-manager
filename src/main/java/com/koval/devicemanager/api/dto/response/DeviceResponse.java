@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.Instant;
@@ -12,6 +13,7 @@ import java.time.Instant;
 // Consider splitting into CreateDeviceResponse, UpdateDeviceResponse, GetDeviceResponse
 // if their fields start to diverge.
 @Getter
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"id", "name", "brand", "state", "createdAt", "updatedAt"})
 public class DeviceResponse {
@@ -22,12 +24,14 @@ public class DeviceResponse {
     private final Instant createdAt;
     private final Instant updatedAt;
 
-    public DeviceResponse(Device device) {
-        this.id = device.getId();
-        this.name = device.getName();
-        this.brand = device.getBrand();
-        this.state = device.getState();
-        this.createdAt = device.getCreatedAt();
-        this.updatedAt = device.getUpdatedAt();
+    public static DeviceResponse from(Device device) {
+        return DeviceResponse.builder()
+                .id(device.getId())
+                .name(device.getName())
+                .brand(device.getBrand())
+                .state(device.getState())
+                .createdAt(device.getCreatedAt())
+                .updatedAt(device.getUpdatedAt())
+                .build();
     }
 }

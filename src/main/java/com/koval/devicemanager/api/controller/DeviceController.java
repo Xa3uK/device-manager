@@ -19,30 +19,28 @@ public class DeviceController implements DeviceApi {
 
     @Override
     public DeviceResponse create(@Valid CreateDeviceRequest request) {
-        return new DeviceResponse(deviceService.create(request.getName(), request.getBrand()));
+        return DeviceResponse.from(deviceService.create(request.getName(), request.getBrand()));
     }
 
     @Override
     public DeviceResponse update(Long id, @Valid UpdateDeviceRequest request) {
-        return new DeviceResponse(
-                deviceService.update(id, request.getName(), request.getBrand(), request.getState())
-        );
+        return DeviceResponse.from(deviceService.update(id, request.getName(), request.getBrand(), request.getState()));
     }
 
     @Override
     public DeviceResponse getById(Long id) {
-        return new DeviceResponse(deviceService.getById(id));
+        return DeviceResponse.from(deviceService.getById(id));
     }
 
     @Override
     public PageResponse<DeviceResponse> getAll(String brand, DeviceState state, Pageable pageable) {
         if (brand != null) {
-            return new PageResponse<>(deviceService.getAllByBrand(brand, pageable).map(DeviceResponse::new));
+            return new PageResponse<>(deviceService.getAllByBrand(brand, pageable).map(DeviceResponse::from));
         }
         if (state != null) {
-            return new PageResponse<>(deviceService.getAllByState(state, pageable).map(DeviceResponse::new));
+            return new PageResponse<>(deviceService.getAllByState(state, pageable).map(DeviceResponse::from));
         }
-        return new PageResponse<>(deviceService.getAll(pageable).map(DeviceResponse::new));
+        return new PageResponse<>(deviceService.getAll(pageable).map(DeviceResponse::from));
     }
 
     @Override

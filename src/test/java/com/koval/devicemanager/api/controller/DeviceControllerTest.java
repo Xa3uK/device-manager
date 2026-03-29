@@ -16,9 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.koval.devicemanager.infra.converter.StringToDeviceStateConverter;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.format.support.FormattingConversionService;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.databind.DeserializationFeature;
@@ -58,10 +61,14 @@ class DeviceControllerTest {
                 .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .build();
 
+        FormattingConversionService conversionService = new DefaultFormattingConversionService();
+        conversionService.addConverter(new StringToDeviceStateConverter());
+
         mockMvc = MockMvcBuilders.standaloneSetup(deviceController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
-                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .setMessageConverters(new JacksonJsonHttpMessageConverter(objectMapper))
+                .setConversionService(conversionService)
                 .build();
     }
 
@@ -350,6 +357,19 @@ class DeviceControllerTest {
                                 {"id": 3, "state": "AVAILABLE"}
                               ],
                               "totalElements": 3
+                            }
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 400 when invalid state value is provided as query param")
+        void returns400WhenInvalidStateProvidedAsQueryParam() throws Exception {
+            mockMvc.perform(get("/api/v1/devices").param("state", "BLAH"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().json("""
+                            {
+                              "status": 400,
+                              "message": "Invalid state value: 'BLAH'. Valid values are: AVAILABLE, IN_USE, INACTIVE"
                             }
                             """));
         }

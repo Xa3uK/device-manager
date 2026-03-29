@@ -1,16 +1,15 @@
 package com.koval.devicemanager.api.dto.response;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
 import java.time.Instant;
 
-@Getter
-@RequiredArgsConstructor
+@Value
 public class ErrorResponse {
-    private final Instant timestamp;
-    private final int status;
-    private final String error;
-    private final String message;
-    private final String path;
+
+    Instant timestamp;
+    int status;
+    String error;
+    String message;
+    String path;
 }

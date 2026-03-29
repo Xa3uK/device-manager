@@ -4,7 +4,7 @@ import com.koval.devicemanager.domain.model.DeviceState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -12,8 +12,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "devices")
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

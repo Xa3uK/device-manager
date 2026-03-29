@@ -20,6 +20,8 @@ public class DeviceService {
 
     private final DeviceRepository deviceRepository;
 
+    // The initial device state may depend on business needs. Since I can't talk to the product team, I decided to
+    // set it to AVAILABLE by default.
     public Device create(String name, String brand) {
         Device device = new Device();
         device.setName(name);
@@ -32,7 +34,7 @@ public class DeviceService {
 
     public Device update(Long id, String name, String brand, DeviceState state) {
         Device existing = deviceRepository.findById(id)
-                .orElseThrow(() -> new DeviceNotFoundException(id));
+            .orElseThrow(() -> new DeviceNotFoundException(id));
 
         if (existing.getState() == DeviceState.IN_USE && (name != null || brand != null)) {
             throw new IllegalStateException("Name and brand cannot be updated while device is in use");
@@ -51,7 +53,7 @@ public class DeviceService {
 
     public Device getById(Long id) {
         return deviceRepository.findById(id)
-                .orElseThrow(() -> new DeviceNotFoundException(id));
+            .orElseThrow(() -> new DeviceNotFoundException(id));
     }
 
     public Page<Device> getAll(Pageable pageable) {
@@ -68,7 +70,7 @@ public class DeviceService {
 
     public void delete(Long id) {
         Device device = deviceRepository.findById(id)
-                .orElseThrow(() -> new DeviceNotFoundException(id));
+            .orElseThrow(() -> new DeviceNotFoundException(id));
 
         if (device.getState() == DeviceState.IN_USE) {
             throw new IllegalStateException("Device cannot be deleted while it is in use");
