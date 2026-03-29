@@ -12,15 +12,9 @@ A REST API for managing devices built with Spring Boot 4 and PostgreSQL.
 - **springdoc-openapi** — API documentation
 - **Testcontainers** — integration testing against real PostgreSQL
 
-## Requirements
+## Running with Docker
 
-- Docker and Docker Compose
-
-To run locally without Docker:
-- Java 21
-- PostgreSQL 17 running on `localhost:5432`
-
-## Running with Docker Compose
+**Requires:** Docker Desktop
 
 ```bash
 docker compose up --build
@@ -46,6 +40,8 @@ docker compose down -v
 
 ## Running Locally
 
+**Requires:** Java 21 and PostgreSQL 17
+
 Start a PostgreSQL instance and create the database:
 
 ```sql
@@ -69,17 +65,9 @@ SPRING_DATASOURCE_PASSWORD=your_password \
 
 ## API Documentation
 
-Swagger UI is available at:
+Swagger UI is available at: http://localhost:8080/swagger-ui.html
 
-```
-http://localhost:8080/swagger-ui.html
-```
-
-OpenAPI JSON spec:
-
-```
-http://localhost:8080/v3/api-docs
-```
+OpenAPI JSON spec: http://localhost:8080/v3/api-docs
 
 ## API Reference
 
