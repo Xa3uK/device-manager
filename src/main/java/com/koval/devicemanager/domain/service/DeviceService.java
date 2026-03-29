@@ -1,21 +1,22 @@
 package com.koval.devicemanager.domain.service;
 
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
-import com.koval.devicemanager.domain.exception.PageSizeExceededException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeviceService {
+
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final DeviceRepository deviceRepository;
 
@@ -24,7 +25,9 @@ public class DeviceService {
         device.setName(name);
         device.setBrand(brand);
         device.setState(DeviceState.AVAILABLE);
-        return deviceRepository.save(device);
+        Device saved = deviceRepository.save(device);
+        log.info("Created device id={}", saved.getId());
+        return saved;
     }
 
     public Device update(Long id, String name, String brand, DeviceState state) {
@@ -41,7 +44,9 @@ public class DeviceService {
         changes.setBrand(brand);
         changes.setState(state);
 
-        return deviceRepository.update(changes);
+        Device updated = deviceRepository.update(changes);
+        log.info("Updated device id={}", id);
+        return updated;
     }
 
     public Device getById(Long id) {
@@ -49,27 +54,16 @@ public class DeviceService {
                 .orElseThrow(() -> new DeviceNotFoundException(id));
     }
 
-    private static final int MAX_PAGE_SIZE = 100;
-
     public Page<Device> getAll(Pageable pageable) {
-        if (pageable.getPageSize() > MAX_PAGE_SIZE) {
-            throw new PageSizeExceededException(pageable.getPageSize(), MAX_PAGE_SIZE);
-        }
-        return deviceRepository.findAll(pageable);
+        return deviceRepository.findAll(clamp(pageable));
     }
 
     public Page<Device> getAllByBrand(String brand, Pageable pageable) {
-        if (pageable.getPageSize() > MAX_PAGE_SIZE) {
-            throw new PageSizeExceededException(pageable.getPageSize(), MAX_PAGE_SIZE);
-        }
-        return deviceRepository.findAllByBrand(brand, pageable);
+        return deviceRepository.findAllByBrand(brand, clamp(pageable));
     }
 
     public Page<Device> getAllByState(DeviceState state, Pageable pageable) {
-        if (pageable.getPageSize() > MAX_PAGE_SIZE) {
-            throw new PageSizeExceededException(pageable.getPageSize(), MAX_PAGE_SIZE);
-        }
-        return deviceRepository.findAllByState(state, pageable);
+        return deviceRepository.findAllByState(state, clamp(pageable));
     }
 
     public void delete(Long id) {
@@ -81,5 +75,13 @@ public class DeviceService {
         }
 
         deviceRepository.delete(id);
+        log.info("Deleted device id={}", id);
+    }
+
+    private Pageable clamp(Pageable pageable) {
+        if (pageable.getPageSize() > MAX_PAGE_SIZE) {
+            return PageRequest.of(pageable.getPageNumber(), MAX_PAGE_SIZE, pageable.getSort());
+        }
+        return pageable;
     }
 }
