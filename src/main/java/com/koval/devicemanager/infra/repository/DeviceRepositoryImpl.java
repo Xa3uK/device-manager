@@ -1,11 +1,11 @@
 package com.koval.devicemanager.infra.repository;
 
+import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
 import com.koval.devicemanager.domain.model.Device;
 import com.koval.devicemanager.domain.model.DeviceState;
 import com.koval.devicemanager.domain.repository.DeviceRepository;
 import com.koval.devicemanager.infra.entity.DeviceEntity;
 import com.koval.devicemanager.infra.mapper.DeviceMapper;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +28,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public Device update(Device device) {
         DeviceEntity entity = jpaRepository.findById(device.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Device not found with id: " + device.getId()));
+                .orElseThrow(() -> new DeviceNotFoundException(device.getId()));
         mapper.mergeToEntity(device, entity);
         return mapper.toDomain(jpaRepository.save(entity));
     }

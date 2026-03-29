@@ -4,11 +4,12 @@ import tools.jackson.databind.exc.InvalidFormatException;
 import tools.jackson.databind.exc.InvalidNullException;
 import com.koval.devicemanager.api.dto.response.ErrorResponse;
 import com.koval.devicemanager.domain.exception.DeviceNotFoundException;
-import com.koval.devicemanager.domain.exception.PageSizeExceededException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,6 +18,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -32,16 +34,13 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(PageSizeExceededException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlePageSizeExceeded(PageSizeExceededException ex, HttpServletRequest request) {
-        return new ErrorResponse(
-            Instant.now(),
-            HttpStatus.BAD_REQUEST.value(),
-            HttpStatus.BAD_REQUEST.getReasonPhrase(),
-            ex.getMessage(),
-            request.getRequestURI()
-        );
+    public ErrorResponse handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+            .map(e -> "'" + e.getField() + "' " + e.getDefaultMessage())
+            .collect(Collectors.joining(", "));
+        return badRequest(message, request);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -66,6 +65,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)
     public ErrorResponse handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
+        log.warn("Business rule violation at {}: {}", request.getRequestURI(), ex.getMessage());
         return new ErrorResponse(
             Instant.now(),
             HttpStatus.UNPROCESSABLE_CONTENT.value(),
