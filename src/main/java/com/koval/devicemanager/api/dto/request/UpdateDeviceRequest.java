@@ -3,6 +3,7 @@ package com.koval.devicemanager.api.dto.request;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import com.koval.devicemanager.domain.model.DeviceState;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
@@ -11,10 +12,12 @@ public class UpdateDeviceRequest {
 
     @JsonSetter(nulls = Nulls.FAIL)
     @Size(min = 1, max = 255)
+    @Pattern(regexp = ".*[a-zA-Z0-9].*", message = "must contain at least one letter or number")
     private String name;
 
     @JsonSetter(nulls = Nulls.FAIL)
     @Size(min = 1, max = 255)
+    @Pattern(regexp = ".*[a-zA-Z0-9].*", message = "must contain at least one letter or number")
     private String brand;
 
     @JsonSetter(nulls = Nulls.FAIL)
