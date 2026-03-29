@@ -321,6 +321,20 @@ class DeviceControllerIT {
         }
 
         @Test
+        @DisplayName("filters by brand and state combined")
+        void filtersByBrandAndState() throws Exception {
+            saveDevice("iPhone 15", "Apple", DeviceState.AVAILABLE);
+            saveDevice("iPhone 14", "Apple", DeviceState.IN_USE);
+            saveDevice("Galaxy S24", "Samsung", DeviceState.AVAILABLE);
+
+            mockMvc.perform(get("/api/v1/devices").param("brand", "Apple").param("state", "AVAILABLE"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.content[0].brand").value("Apple"))
+                    .andExpect(jsonPath("$.content[0].state").value("AVAILABLE"));
+        }
+
+        @Test
         @DisplayName("returns 200 when page size exceeds limit (clamped)")
         void returns200WhenPageSizeExceedsLimit() throws Exception {
             mockMvc.perform(get("/api/v1/devices").param("size", "101"))

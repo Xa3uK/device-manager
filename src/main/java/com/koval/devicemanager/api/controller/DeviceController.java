@@ -52,13 +52,7 @@ public class DeviceController implements DeviceApi {
 
     @Override
     public PageResponse<DeviceResponse> getAll(String brand, DeviceState state, Pageable pageable) {
-        if (brand != null) {
-            return new PageResponse<>(deviceService.getAllByBrand(brand, pageable).map(DeviceResponse::from));
-        }
-        if (state != null) {
-            return new PageResponse<>(deviceService.getAllByState(state, pageable).map(DeviceResponse::from));
-        }
-        return new PageResponse<>(deviceService.getAll(pageable).map(DeviceResponse::from));
+        return new PageResponse<>(deviceService.getAll(brand, state, pageable).map(DeviceResponse::from));
     }
 
     @Override

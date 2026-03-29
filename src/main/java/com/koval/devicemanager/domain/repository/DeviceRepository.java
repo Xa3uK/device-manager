@@ -20,11 +20,7 @@ public interface DeviceRepository {
 
     List<Device> findAllById(List<Long> ids);
 
-    Page<Device> findAll(Pageable pageable);
-
-    Page<Device> findAllByBrand(String brand, Pageable pageable);
-
-    Page<Device> findAllByState(DeviceState state, Pageable pageable);
+    Page<Device> findAll(String brand, DeviceState state, Pageable pageable);
 
     void delete(Long id);
 

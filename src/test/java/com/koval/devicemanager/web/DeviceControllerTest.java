@@ -416,7 +416,7 @@ class DeviceControllerTest {
                     Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
                     Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
             );
-            when(deviceService.getAll(any(Pageable.class))).thenReturn(new PageImpl<>(deviceList, PageRequest.of(0, 10), deviceList.size()));
+            when(deviceService.getAll(isNull(), isNull(), any(Pageable.class))).thenReturn(new PageImpl<>(deviceList, PageRequest.of(0, 10), deviceList.size()));
 
             mockMvc.perform(get("/api/v1/devices"))
                     .andExpect(status().isOk())
@@ -443,7 +443,7 @@ class DeviceControllerTest {
                     Device.builder().id(2L).name("iPhone 14").brand("Apple").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
                     Device.builder().id(3L).name("iPhone 13").brand("Apple").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
             );
-            when(deviceService.getAllByBrand(eq("Apple"), any(Pageable.class))).thenReturn(new PageImpl<>(appleDevices, PageRequest.of(0, 10), appleDevices.size()));
+            when(deviceService.getAll(eq("Apple"), isNull(), any(Pageable.class))).thenReturn(new PageImpl<>(appleDevices, PageRequest.of(0, 10), appleDevices.size()));
 
             mockMvc.perform(get("/api/v1/devices").param("brand", "Apple"))
                     .andExpect(status().isOk())
@@ -467,7 +467,7 @@ class DeviceControllerTest {
                     Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
                     Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build()
             );
-            when(deviceService.getAllByState(eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(new PageImpl<>(availableDevices, PageRequest.of(0, 10), availableDevices.size()));
+            when(deviceService.getAll(isNull(), eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(new PageImpl<>(availableDevices, PageRequest.of(0, 10), availableDevices.size()));
 
             mockMvc.perform(get("/api/v1/devices").param("state", "AVAILABLE"))
                     .andExpect(status().isOk())
@@ -479,6 +479,24 @@ class DeviceControllerTest {
                                 {"id": 3, "state": "AVAILABLE"}
                               ],
                               "totalElements": 3
+                            }
+                            """));
+        }
+
+        @Test
+        @DisplayName("returns 200 filtered by brand and state")
+        void returns200FilteredByBrandAndState() throws Exception {
+            List<Device> result = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build()
+            );
+            when(deviceService.getAll(eq("Apple"), eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(new PageImpl<>(result, PageRequest.of(0, 10), result.size()));
+
+            mockMvc.perform(get("/api/v1/devices").param("brand", "Apple").param("state", "AVAILABLE"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json("""
+                            {
+                              "content": [{"id": 1, "brand": "Apple", "state": "AVAILABLE"}],
+                              "totalElements": 1
                             }
                             """));
         }
@@ -499,7 +517,7 @@ class DeviceControllerTest {
         @Test
         @DisplayName("returns 200 when page size exceeds limit (clamped by service)")
         void returns200WhenPageSizeExceedsLimit() throws Exception {
-            when(deviceService.getAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
+            when(deviceService.getAll(isNull(), isNull(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
             mockMvc.perform(get("/api/v1/devices").param("size", "101"))
                     .andExpect(status().isOk());

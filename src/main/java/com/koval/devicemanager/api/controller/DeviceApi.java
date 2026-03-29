@@ -74,7 +74,7 @@ public interface DeviceApi {
 
     @Operation(
             summary = "Get devices",
-            description = "Returns a paginated list of devices. Optionally filter by `brand` (case-insensitive) or `state`. Page size is capped at 100."
+            description = "Returns a paginated list of devices. Optionally filter by `brand` (case-insensitive), `state`, or both combined. Page size is capped at 100."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Page of devices"),

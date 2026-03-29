@@ -96,16 +96,8 @@ public class DeviceService {
             .orElseThrow(() -> new DeviceNotFoundException(id));
     }
 
-    public Page<Device> getAll(Pageable pageable) {
-        return deviceRepository.findAll(clamp(pageable));
-    }
-
-    public Page<Device> getAllByBrand(String brand, Pageable pageable) {
-        return deviceRepository.findAllByBrand(brand, clamp(pageable));
-    }
-
-    public Page<Device> getAllByState(DeviceState state, Pageable pageable) {
-        return deviceRepository.findAllByState(state, clamp(pageable));
+    public Page<Device> getAll(String brand, DeviceState state, Pageable pageable) {
+        return deviceRepository.findAll(brand, state, clamp(pageable));
     }
 
     public void delete(Long id) {

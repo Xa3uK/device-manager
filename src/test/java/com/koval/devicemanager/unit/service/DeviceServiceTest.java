@@ -10,8 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -168,101 +166,83 @@ class DeviceServiceTest {
     class GetAll {
 
         @Test
-        @DisplayName("returns page when page size is valid")
-        void returnsPageWhenSizeIsValid() {
+        @DisplayName("returns all devices when no filters")
+        void returnsAllDevicesWhenNoFilters() {
             Pageable pageable = PageRequest.of(0, 10);
             List<Device> deviceList = List.of(
                     Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
                     Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
                     Device.builder().id(3L).name("Pixel 8").brand("Google").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
             );
-            when(deviceRepository.findAll(pageable)).thenReturn(new PageImpl<>(deviceList, pageable, deviceList.size()));
+            when(deviceRepository.findAll(null, null, pageable)).thenReturn(new PageImpl<>(deviceList, pageable, deviceList.size()));
 
-            Page<Device> result = deviceService.getAll(pageable);
+            Page<Device> result = deviceService.getAll(null, null, pageable);
 
             assertThat(result.getContent()).hasSize(3);
             assertThat(result.getTotalElements()).isEqualTo(3);
-            verify(deviceRepository).findAll(pageable);
+            verify(deviceRepository).findAll(null, null, pageable);
         }
 
         @Test
-        @DisplayName("clamps page size to maximum when exceeded")
-        void clampsPageSizeWhenExceeded() {
-            Pageable pageable = PageRequest.of(0, 101);
-            when(deviceRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-
-            deviceService.getAll(pageable);
-
-            verify(deviceRepository).findAll(argThat(p -> p.getPageSize() == 100));
-        }
-    }
-
-    @Nested
-    @DisplayName("getAllByBrand")
-    class GetAllByBrand {
-
-        @Test
-        @DisplayName("returns filtered page when page size is valid")
-        void returnsFilteredPageWhenSizeIsValid() {
+        @DisplayName("returns filtered page when brand provided")
+        void returnsFilteredPageWhenBrandProvided() {
             Pageable pageable = PageRequest.of(0, 10);
             List<Device> appleDevices = List.of(
                     Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
-                    Device.builder().id(2L).name("iPhone 14").brand("Apple").state(DeviceState.IN_USE).createdAt(Instant.now()).build(),
-                    Device.builder().id(3L).name("iPhone 13").brand("Apple").state(DeviceState.INACTIVE).createdAt(Instant.now()).build()
+                    Device.builder().id(2L).name("iPhone 14").brand("Apple").state(DeviceState.IN_USE).createdAt(Instant.now()).build()
             );
-            when(deviceRepository.findAllByBrand("Apple", pageable)).thenReturn(new PageImpl<>(appleDevices, pageable, appleDevices.size()));
+            when(deviceRepository.findAll("Apple", null, pageable)).thenReturn(new PageImpl<>(appleDevices, pageable, appleDevices.size()));
 
-            Page<Device> result = deviceService.getAllByBrand("Apple", pageable);
+            Page<Device> result = deviceService.getAll("Apple", null, pageable);
 
-            assertThat(result.getContent()).hasSize(3);
+            assertThat(result.getContent()).hasSize(2);
             assertThat(result.getContent()).allMatch(d -> d.getBrand().equals("Apple"));
-            verify(deviceRepository).findAllByBrand("Apple", pageable);
+            verify(deviceRepository).findAll("Apple", null, pageable);
         }
 
         @Test
-        @DisplayName("clamps page size to maximum when exceeded")
-        void clampsPageSizeWhenExceeded() {
-            Pageable pageable = PageRequest.of(0, 101);
-            when(deviceRepository.findAllByBrand(eq("Apple"), any(Pageable.class))).thenReturn(Page.empty());
-
-            deviceService.getAllByBrand("Apple", pageable);
-
-            verify(deviceRepository).findAllByBrand(eq("Apple"), argThat(p -> p.getPageSize() == 100));
-        }
-    }
-
-    @Nested
-    @DisplayName("getAllByState")
-    class GetAllByState {
-
-        @ParameterizedTest(name = "state={0}")
-        @EnumSource(DeviceState.class)
-        @DisplayName("returns filtered page for each state")
-        void returnsFilteredPageForEachState(DeviceState state) {
+        @DisplayName("returns filtered page when state provided")
+        void returnsFilteredPageWhenStateProvided() {
             Pageable pageable = PageRequest.of(0, 10);
-            List<Device> stateDevices = List.of(
-                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(state).createdAt(Instant.now()).build(),
-                    Device.builder().id(2L).name("Galaxy S24").brand("Samsung").state(state).createdAt(Instant.now()).build(),
-                    Device.builder().id(3L).name("Pixel 8").brand("Google").state(state).createdAt(Instant.now()).build()
+            List<Device> availableDevices = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build(),
+                    Device.builder().id(2L).name("Pixel 8").brand("Google").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build()
             );
-            when(deviceRepository.findAllByState(state, pageable)).thenReturn(new PageImpl<>(stateDevices, pageable, stateDevices.size()));
+            when(deviceRepository.findAll(null, DeviceState.AVAILABLE, pageable)).thenReturn(new PageImpl<>(availableDevices, pageable, availableDevices.size()));
 
-            Page<Device> result = deviceService.getAllByState(state, pageable);
+            Page<Device> result = deviceService.getAll(null, DeviceState.AVAILABLE, pageable);
 
-            assertThat(result.getContent()).hasSize(3);
-            assertThat(result.getContent()).allMatch(d -> d.getState() == state);
-            verify(deviceRepository).findAllByState(state, pageable);
+            assertThat(result.getContent()).hasSize(2);
+            assertThat(result.getContent()).allMatch(d -> d.getState() == DeviceState.AVAILABLE);
+            verify(deviceRepository).findAll(null, DeviceState.AVAILABLE, pageable);
+        }
+
+        @Test
+        @DisplayName("returns filtered page when both brand and state provided")
+        void returnsFilteredPageWhenBrandAndStateProvided() {
+            Pageable pageable = PageRequest.of(0, 10);
+            List<Device> result_devices = List.of(
+                    Device.builder().id(1L).name("iPhone 15").brand("Apple").state(DeviceState.AVAILABLE).createdAt(Instant.now()).build()
+            );
+            when(deviceRepository.findAll("Apple", DeviceState.AVAILABLE, pageable)).thenReturn(new PageImpl<>(result_devices, pageable, result_devices.size()));
+
+            Page<Device> result = deviceService.getAll("Apple", DeviceState.AVAILABLE, pageable);
+
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).getBrand()).isEqualTo("Apple");
+            assertThat(result.getContent().get(0).getState()).isEqualTo(DeviceState.AVAILABLE);
+            verify(deviceRepository).findAll("Apple", DeviceState.AVAILABLE, pageable);
         }
 
         @Test
         @DisplayName("clamps page size to maximum when exceeded")
         void clampsPageSizeWhenExceeded() {
             Pageable pageable = PageRequest.of(0, 101);
-            when(deviceRepository.findAllByState(eq(DeviceState.AVAILABLE), any(Pageable.class))).thenReturn(Page.empty());
+            when(deviceRepository.findAll(isNull(), isNull(), any(Pageable.class))).thenReturn(Page.empty());
 
-            deviceService.getAllByState(DeviceState.AVAILABLE, pageable);
+            deviceService.getAll(null, null, pageable);
 
-            verify(deviceRepository).findAllByState(eq(DeviceState.AVAILABLE), argThat(p -> p.getPageSize() == 100));
+            verify(deviceRepository).findAll(isNull(), isNull(), argThat(p -> p.getPageSize() == 100));
         }
     }
 

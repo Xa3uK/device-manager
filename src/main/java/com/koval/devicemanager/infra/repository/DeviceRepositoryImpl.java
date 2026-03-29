@@ -51,18 +51,17 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public Page<Device> findAll(Pageable pageable) {
+    public Page<Device> findAll(String brand, DeviceState state, Pageable pageable) {
+        if (brand != null && state != null) {
+            return jpaRepository.findAllByBrandIgnoreCaseAndState(brand, state, pageable).map(mapper::toDomain);
+        }
+        if (brand != null) {
+            return jpaRepository.findAllByBrandIgnoreCase(brand, pageable).map(mapper::toDomain);
+        }
+        if (state != null) {
+            return jpaRepository.findAllByState(state, pageable).map(mapper::toDomain);
+        }
         return jpaRepository.findAll(pageable).map(mapper::toDomain);
-    }
-
-    @Override
-    public Page<Device> findAllByBrand(String brand, Pageable pageable) {
-        return jpaRepository.findAllByBrandIgnoreCase(brand, pageable).map(mapper::toDomain);
-    }
-
-    @Override
-    public Page<Device> findAllByState(DeviceState state, Pageable pageable) {
-        return jpaRepository.findAllByState(state, pageable).map(mapper::toDomain);
     }
 
     @Override

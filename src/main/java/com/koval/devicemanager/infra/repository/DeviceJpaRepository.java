@@ -12,4 +12,6 @@ public interface DeviceJpaRepository extends JpaRepository<DeviceEntity, Long> {
     Page<DeviceEntity> findAllByBrandIgnoreCase(String brand, Pageable pageable);
 
     Page<DeviceEntity> findAllByState(DeviceState state, Pageable pageable);
+
+    Page<DeviceEntity> findAllByBrandIgnoreCaseAndState(String brand, DeviceState state, Pageable pageable);
 }
